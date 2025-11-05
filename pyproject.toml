@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "black>=25.9.0",
+    "dlt[duckdb]>=1.18.2",
+    "httpx>=0.28.1",
+    "polars>=1.35.1",
+    "pyarrow>=22.0.0",
+]
