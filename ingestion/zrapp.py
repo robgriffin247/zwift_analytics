@@ -4,13 +4,17 @@ import dlt
 import json
 from decimal import Decimal
 import time
+from typing import Any
+from collections.abc import Iterator
+from dlt.extract import DltResource
+from dlt.common.pipeline import LoadInfo
 
-def ingest_zrapp(endpoint, payload):
+def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     base_url = "https://zwift-ranking.herokuapp.com/public/"
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
 
-    def coerce_floats(rider):
+    def coerce_floats(rider: dict[str, Any]) -> dict[str, Any]:
         """
         This is to prevent variant columns in dlt as columns such as weight will be interpreted as either ints or floats
         """
@@ -57,10 +61,9 @@ def ingest_zrapp(endpoint, payload):
                     target[leaf] = Decimal(str(value))
 
         return rider
-    
 
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
-    def get_rider(rider_id: int):
+    def get_rider(rider_id: int) -> Iterator[dict[str, Any]]:
 
         print(f"Getting rider {rider_id}")
 
@@ -77,20 +80,23 @@ def ingest_zrapp(endpoint, payload):
         rider = json.loads(decoded_content)
         yield coerce_floats(rider)
 
-        #yield rider
-
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
-    def get_club(club_id: int):
+    def get_club(club_id: int, allow_wait=False) -> Iterator[dict[str, Any]]:
 
         if not isinstance(club_id, int):
             raise TypeError(f"Club ID must be an integer, got {club_id!r}")
 
         response = httpx.get(f"{base_url}clubs/{club_id}", headers=header)
 
-        if response.status_code==429:
-            time_to_wait = int(json.loads(response.content.decode(encoding="utf-8")).get("retryAfter"))
-            print(f"429 Error: Too Many Requests - waiting {time_to_wait} seconds to try again!")
-            time.sleep(time_to_wait+1)
+        # This allows the code to wait out; useful in dev
+        if response.status_code == 429 and allow_wait:
+            time_to_wait = int(
+                json.loads(response.content.decode(encoding="utf-8")).get("retryAfter")
+            )
+            print(
+                f"429 Error: Too Many Requests - waiting {time_to_wait} seconds to try again!"
+            )
+            time.sleep(time_to_wait + 1)
             response = httpx.get(f"{base_url}clubs/{club_id}", headers=header)
 
         response.raise_for_status()
@@ -107,10 +113,12 @@ def ingest_zrapp(endpoint, payload):
             rider["club"] = {"id": club_id, "name": club_name}
             yield rider
 
-
+    @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
+    def get_riders(ids: list[int]) -> Iterator[dict[str, Any]]:
+        pass
 
     @dlt.source
-    def zrapp_source(endpoint, payload):
+    def zrapp_source(endpoint, payload) -> list[DltResource[Any]]:
 
         if endpoint == "rider":
             return [get_rider(payload)]
@@ -137,7 +145,7 @@ def ingest_zrapp(endpoint, payload):
 
 
 if __name__ == "__main__":
-    #print(ingest_zrapp("rider", 4598636))
+    print(ingest_zrapp("rider", 4598636))
     #print(ingest_zrapp("rider", 5574))
-    #print(ingest_zrapp("rider", 5879996))
-    print(ingest_zrapp("club", 20650))
+    # print(ingest_zrapp("rider", 5879996))
+    # print(ingest_zrapp("club", 20650))
