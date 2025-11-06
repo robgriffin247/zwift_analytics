@@ -1,0 +1,17 @@
+name: 'zwift_analytics'
+version: '1.0.0'
+
+profile: 'zwift_analytics'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  zwift_analytics:
+    staging:
+      +schema: staging
+      +materialized: table

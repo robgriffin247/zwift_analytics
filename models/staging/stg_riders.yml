@@ -1,0 +1,13 @@
+version: 2
+
+models: 
+  - name: stg_riders
+    description: Riders data from zrapp, staged to select columns, set types and rename.
+    config:
+      tags: ["zrapp", "staging", "riders"]
+    columns:
+      - name: rider_id
+        description: Unique identifier per rider.
+        data_tests:
+          - not_null
+          - unique

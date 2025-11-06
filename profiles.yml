@@ -1,0 +1,8 @@
+zwift_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/zwift_analytics.duckdb
+      schema: staging
+      threads: 2
