@@ -17,20 +17,20 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     def wait_429(response: httpx.Response) -> int | None:
         """
-        A 429 means there has not been enough time elpased since the previous call to the endpoint; you've hit the rate limiter.
+        A 429 means there has not been enough time elapsed since the previous call to the endpoint; you've hit the rate limiter.
         This returns a helpful message (rather than just raising 429 error) and helps if you want to automate retry.
         """
         if response.status_code == 429:
-            time_to_wait = (
-                int(
-                    json.loads(response.content.decode(encoding="utf-8")).get(
-                        "retryAfter"
-                    )
-                )
-                + 1
-            )
+            content = response.content
+            decoded_content = content.decode(encoding="utf-8")
+            json_content = json.loads(decoded_content)
+
+            time_to_wait = int(json_content.get("retryAfter")) + 1
+            hours, remainder = divmod(time_to_wait, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
             print(
-                f"429 Error: Too Many Requests - wait {time_to_wait} seconds to try again!"
+                f"429 Error: Wait {(str(hours) + ':') if time_to_wait >= 3600 else ""}{minutes:02}:{seconds:02} to try again!"
             )
 
             return time_to_wait
@@ -219,4 +219,5 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 if __name__ == "__main__":
     print(ingest_zrapp("rider", 4598636))
     print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
-    print(ingest_zrapp("club", 20650))
+    # print(ingest_zrapp("club", 20650))
+    # print(ingest_zrapp("club", 18013))
