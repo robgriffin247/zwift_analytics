@@ -15,16 +15,27 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     base_url = "https://zwift-ranking.herokuapp.com/public/"
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
 
-    def wait_429(response) -> None:
+    def wait_429(response: httpx.Response) -> int | None:
+        """
+        A 429 means there has not been enough time elpased since the previous call to the endpoint; you've hit the rate limiter.
+        This returns a helpful message (rather than just raising 429 error) and helps if you want to
+        """
         if response.status_code == 429:
-            time_to_wait = int(
-                json.loads(response.content.decode(encoding="utf-8")).get("retryAfter")
+            time_to_wait = (
+                int(
+                    json.loads(response.content.decode(encoding="utf-8")).get(
+                        "retryAfter"
+                    )
+                )
+                + 1
             )
             print(
                 f"429 Error: Too Many Requests - wait {time_to_wait} seconds to try again!"
             )
 
-        return
+            return time_to_wait
+
+        return None
 
     def coerce_floats(rider: dict[str, Any]) -> dict[str, Any]:
         """
@@ -75,6 +86,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         return rider
 
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
+    # def get_rider(rider_id: int, wait=True) -> Iterator[dict[str, Any]]: # demo of creating an auto-delay-retry
     def get_rider(rider_id: int) -> Iterator[dict[str, Any]]:
 
         if not isinstance(rider_id, int):
@@ -83,7 +95,15 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         print(f"Getting rider {rider_id}")
 
         response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
+
         wait_429(response)
+
+        # # demo of creating an auto-delay-retry
+        # _wait = wait_429(response)
+        # if wait and _wait is not None:
+        #     time.sleep(_wait)
+        #     response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
+
         response.raise_for_status()
 
         content = response.content
