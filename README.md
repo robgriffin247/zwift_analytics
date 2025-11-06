@@ -64,4 +64,6 @@ An app to collect and visualise data related to Zwift racing.
 
 ## Tasks
 
-- [ ] feat-0001/setup-ingestion-from-zrapp
+- [ ] **feat-0001/setup-ingestion-from-zrapp**
+    - Rider data needs to be extracted from the ZwiftRacing.app API into a database
+    - **Definition of done:** a rider id, a club id, or a list of rider ids can be used to extract and load data for the given rider(s) to a development database. Data should merge to keep the most recent value for each rider, merging on rider_id. Does not require motherduck production database or modelling of data beyond raw.
