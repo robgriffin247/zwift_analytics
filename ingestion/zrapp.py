@@ -15,7 +15,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     base_url = "https://zwift-ranking.herokuapp.com/public/"
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
 
-    def wait_429(response):
+    def wait_429(response) -> None:
         if response.status_code == 429:
             time_to_wait = int(
                 json.loads(response.content.decode(encoding="utf-8")).get("retryAfter")
@@ -23,6 +23,8 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
             print(
                 f"429 Error: Too Many Requests - wait {time_to_wait} seconds to try again!"
             )
+
+        return
 
     def coerce_floats(rider: dict[str, Any]) -> dict[str, Any]:
         """
@@ -161,6 +163,8 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
             credentials="data/zwift_analytics.duckdb"
         )
 
+    # Add in here for motherduck once setup
+
     pipeline = dlt.pipeline(
         pipeline_name="zwift_analytics__zrapp_pipeline",
         destination=_destination,
@@ -174,7 +178,5 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 if __name__ == "__main__":
     print(ingest_zrapp("rider", 4598636))
-    print(ingest_zrapp("riders", [4598636, 2822494, 4638424]))
-    # print(ingest_zrapp("rider", 5574))
-    # print(ingest_zrapp("rider", 5879996))
+    print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
     print(ingest_zrapp("club", 20650))
