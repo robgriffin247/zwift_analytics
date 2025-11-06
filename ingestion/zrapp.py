@@ -9,10 +9,20 @@ from collections.abc import Iterator
 from dlt.extract import DltResource
 from dlt.common.pipeline import LoadInfo
 
+
 def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     base_url = "https://zwift-ranking.herokuapp.com/public/"
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
+
+    def wait_429(response):
+        if response.status_code == 429:
+            time_to_wait = int(
+                json.loads(response.content.decode(encoding="utf-8")).get("retryAfter")
+            )
+            print(
+                f"429 Error: Too Many Requests - wait {time_to_wait} seconds to try again!"
+            )
 
     def coerce_floats(rider: dict[str, Any]) -> dict[str, Any]:
         """
@@ -65,40 +75,32 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
     def get_rider(rider_id: int) -> Iterator[dict[str, Any]]:
 
-        print(f"Getting rider {rider_id}")
-
         if not isinstance(rider_id, int):
             raise TypeError(f"Rider ID must be an integer, got {rider_id!r}")
 
-        response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
-        response.raise_for_status()
+        print(f"Getting rider {rider_id}")
 
-        time.sleep(5)
+        response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
+        wait_429(response)
+        response.raise_for_status()
 
         content = response.content
         decoded_content = content.decode(encoding="utf-8")
         rider = json.loads(decoded_content)
         yield coerce_floats(rider)
 
+        time.sleep(3)
+
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
-    def get_club(club_id: int, allow_wait=False) -> Iterator[dict[str, Any]]:
+    def get_club(club_id: int) -> Iterator[dict[str, Any]]:
 
         if not isinstance(club_id, int):
             raise TypeError(f"Club ID must be an integer, got {club_id!r}")
 
+        print(f"Getting club {club_id}")
+
         response = httpx.get(f"{base_url}clubs/{club_id}", headers=header)
-
-        # This allows the code to wait out; useful in dev
-        if response.status_code == 429 and allow_wait:
-            time_to_wait = int(
-                json.loads(response.content.decode(encoding="utf-8")).get("retryAfter")
-            )
-            print(
-                f"429 Error: Too Many Requests - waiting {time_to_wait} seconds to try again!"
-            )
-            time.sleep(time_to_wait + 1)
-            response = httpx.get(f"{base_url}clubs/{club_id}", headers=header)
-
+        wait_429(response)
         response.raise_for_status()
 
         content = response.content
@@ -113,9 +115,29 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
             rider["club"] = {"id": club_id, "name": club_name}
             yield rider
 
+        time.sleep(3)
+
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
     def get_riders(ids: list[int]) -> Iterator[dict[str, Any]]:
-        pass
+
+        if not isinstance(ids, list) or len(ids) == 0 or not isinstance(ids[0], int):
+            raise TypeError(f"Input must be a list of ID integers, got {ids!r}")
+
+        print(f"Getting {len(ids)} riders")
+
+        response = httpx.post(
+            f"{base_url}riders/", headers=header, json=ids, timeout=30
+        )
+        wait_429(response)
+        response.raise_for_status()
+
+        content = response.content
+        decoded_content = content.decode(encoding="utf-8")
+        riders = json.loads(decoded_content)
+        for rider in riders:
+            yield coerce_floats(rider)
+
+        time.sleep(3)
 
     @dlt.source
     def zrapp_source(endpoint, payload) -> list[DltResource[Any]]:
@@ -125,6 +147,12 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
         if endpoint == "club":
             return [get_club(payload)]
+
+        if endpoint == "riders":
+            return [get_riders(payload)]
+
+        else:
+            raise ValueError("Endpoint must be one of rider, club and riders")
 
     destination = os.getenv("DLT_DESTINATION")
 
@@ -146,6 +174,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 if __name__ == "__main__":
     print(ingest_zrapp("rider", 4598636))
-    #print(ingest_zrapp("rider", 5574))
+    print(ingest_zrapp("riders", [4598636, 2822494, 4638424]))
+    # print(ingest_zrapp("rider", 5574))
     # print(ingest_zrapp("rider", 5879996))
-    # print(ingest_zrapp("club", 20650))
+    print(ingest_zrapp("club", 20650))
