@@ -18,7 +18,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     def wait_429(response: httpx.Response) -> int | None:
         """
         A 429 means there has not been enough time elpased since the previous call to the endpoint; you've hit the rate limiter.
-        This returns a helpful message (rather than just raising 429 error) and helps if you want to
+        This returns a helpful message (rather than just raising 429 error) and helps if you want to automate retry.
         """
         if response.status_code == 429:
             time_to_wait = (
@@ -39,7 +39,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     def coerce_floats(rider: dict[str, Any]) -> dict[str, Any]:
         """
-        This is to prevent variant columns in dlt as columns such as weight will be interpreted as either ints or floats
+        This is to prevent variant columns in dlt as columns such as weight will be interpreted as either ints or floats depending on the rider value.
         """
         FLOAT_FIELDS = [
             "weight",
@@ -88,7 +88,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
     # def get_rider(rider_id: int, wait=True) -> Iterator[dict[str, Any]]: # demo of creating an auto-delay-retry
     def get_rider(rider_id: int) -> Iterator[dict[str, Any]]:
-
+        """
+        Make a GET request to the riders endpoint for a single rider
+        """
         if not isinstance(rider_id, int):
             raise TypeError(f"Rider ID must be an integer, got {rider_id!r}")
 
@@ -109,13 +111,16 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         content = response.content
         decoded_content = content.decode(encoding="utf-8")
         rider = json.loads(decoded_content)
+
         yield coerce_floats(rider)
 
         time.sleep(3)
 
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
     def get_club(club_id: int) -> Iterator[dict[str, Any]]:
-
+        """
+        Make a GET request to the clubs endpoint for all (up to 1000) riders in a single club (if >1000 riders in a club, it's the first 1000 sorted on riderId).
+        """
         if not isinstance(club_id, int):
             raise TypeError(f"Club ID must be an integer, got {club_id!r}")
 
@@ -129,9 +134,12 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         decoded_content = content.decode(encoding="utf-8")
         club = json.loads(decoded_content)
 
-        # Riders in club endpoint missing the club id and name so need adding in
+        """
+        Riders in club endpoint riders data are missing the club id and name so need this info adding in.
+        """
         riders = club["riders"]
         club_name = club["name"]
+
         for rider in riders:
             coerce_floats(rider)
             rider["club"] = {"id": club_id, "name": club_name}
@@ -141,7 +149,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
     def get_riders(ids: list[int]) -> Iterator[dict[str, Any]]:
-
+        """
+        Make a POST request to get rider details for a list of rider IDs.
+        """
         if not isinstance(ids, list) or len(ids) == 0 or not isinstance(ids[0], int):
             raise TypeError(f"Input must be a list of ID integers, got {ids!r}")
 
@@ -156,6 +166,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         content = response.content
         decoded_content = content.decode(encoding="utf-8")
         riders = json.loads(decoded_content)
+
         for rider in riders:
             yield coerce_floats(rider)
 
@@ -163,6 +174,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     @dlt.source
     def zrapp_source(endpoint, payload) -> list[DltResource[Any]]:
+        """
+        Return the correct resource depending on the chosen endpoint.
+        """
 
         if endpoint == "rider":
             return [get_rider(payload)]
@@ -176,6 +190,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         else:
             raise ValueError("Endpoint must be one of rider, club and riders")
 
+    """
+    Set dlt desintation credentials, specific to dev and prod.
+    """
     destination = os.getenv("DLT_DESTINATION")
 
     if destination == "duckdb":
@@ -191,6 +208,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         dataset_name="zrapp",
     )
 
+    """
+    Run the pipeline!
+    """
     load_info = pipeline.run(zrapp_source(endpoint, payload))
 
     return load_info
