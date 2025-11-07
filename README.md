@@ -305,7 +305,7 @@ Data is extracted from zwiftracing.app API (zrapp) using httpx and loaded to duc
     - Extract from get riders, get clubs and post riders
     - Load all to a raw riders table in duckdb
     - Constrain decimals to be decimals
-- [ ] **feat-0002/setup-dbt-to-stage-data-in-dev**
+- [x] **feat-0002/setup-dbt-to-stage-data-in-dev**
     - Data needs to be modelled from raw to staging using dbt
     - Setup dbt project using local duckdb
     - Select, type and name columns
