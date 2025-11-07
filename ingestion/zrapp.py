@@ -86,7 +86,6 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         return rider
 
     @dlt.resource(name="riders", write_disposition="merge", primary_key="rider_id")
-    # def get_rider(rider_id: int, wait=True) -> Iterator[dict[str, Any]]: # demo of creating an auto-delay-retry
     def get_rider(rider_id: int) -> Iterator[dict[str, Any]]:
         """
         Make a GET request to the riders endpoint for a single rider
@@ -97,15 +96,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         print(f"Getting rider {rider_id}")
 
         response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
-
         wait_429(response)
-
-        # # demo of creating an auto-delay-retry
-        # _wait = wait_429(response)
-        # if wait and _wait is not None:
-        #     time.sleep(_wait)
-        #     response = httpx.get(f"{base_url}riders/{rider_id}", headers=header)
-
         response.raise_for_status()
 
         content = response.content
@@ -155,7 +146,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
         if not isinstance(ids, list) or len(ids) == 0 or not isinstance(ids[0], int):
             raise TypeError(f"Input must be a list of ID integers, got {ids!r}")
 
-        print(f"Getting {len(ids)} riders")
+        print(
+            f"Getting {len(ids)} riders: {', '.join([str(i) for i in ids]) if len(ids)<=3 else ', '.join([str(i) for i in ids[:2]]) + '... ' + str(ids[-1])}"
+        )
 
         response = httpx.post(
             f"{base_url}riders/", headers=header, json=ids, timeout=30
@@ -191,7 +184,7 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
             raise ValueError("Endpoint must be one of rider, club and riders")
 
     """
-    Set dlt desintation credentials, specific to dev and prod.
+    Set dlt destination credentials, specific to dev and prod.
     """
     destination = os.getenv("DLT_DESTINATION")
 
@@ -217,7 +210,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 
 if __name__ == "__main__":
-    print(ingest_zrapp("rider", 4598636))
-    print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
+    # print(ingest_zrapp("rider", 4598636))
+    # print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
     # print(ingest_zrapp("club", 20650))
     # print(ingest_zrapp("club", 18013))
+    print(ingest_zrapp("club", 2223))
+    # print(ingest_zrapp("club", 161))

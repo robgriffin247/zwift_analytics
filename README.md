@@ -16,48 +16,59 @@ An app to collect and visualise data related to Zwift racing.
 
 ## DevLog
 
-1. Prerequisites
+#### Prerequisites
 
-    - Git
-    - GitHub
-    - uv
-    - direnv
-    - DuckDB
-    - MotherDuck account
-    - ZwiftRacing.app API token
+- Git
+- GitHub
+- uv
+- direnv
+- DuckDB
+- MotherDuck account
+- ZwiftRacing.app API token
 
 
-1. Setup 
+#### Setup 
 
-    ```{bash}
-    # bash
+1. Create repo on GitHub
+
+1. Clone repo
+
+    ```
     git clone git@github.com:robgriffin247/zwift_analytics.git
     cd zwift_analytics
-    uv init
-    uv add black
-    direnv allow
-    echo ".env" >> .gitignore
-    echo 'ZRAPP_API_KEY="<ZRAPP_API_KEY>"' >> .env
     ```
-    
-    - Replace ``<ZRAPP_API_KEY>`` with API key
 
-    - Add ``envrc`` file:
-        ```{bash}
-        # ./.envrc
-        # Handle windows carriage-returns
-        sed -i 's/\r$//' .env
+1. Add ``uv`` as the package manager with ``uv init``
 
-        # Export .env variables
-        set -a
-        source .env
-        set +a
-        ```
+1. Add Black formatter with ``uv add black``
 
-1. Ingestion (feat-0001/setup-ingestion-from-zrapp)
+1. Add ``.env`` to ``.gitignore``
 
-    ```{bash}
-    # bash
+1. Add zrapp API key to ``.env``  as ``ZRAPP_API_KEY="<ZRAPP_API_KEY>"``
+
+1. Add ``.envrc`` file as follows
+
+    ```
+    # Handle windows carriage-returns
+    sed -i 's/\r$//' .env
+
+    # Export .env variables
+    set -a
+    source .env
+    set +a
+    ```
+
+1. Run ``direnv allow``, allowing ``direnv`` to run the ``.envrc`` as you ``cd`` into the project 
+
+#### Ingestion (feat-0001/setup-ingestion-from-zrapp)
+
+<!-- TODO: fix up these notes -->
+
+Data is extracted from zwiftracing.app API (zrapp) using httpx and loaded to duckdb (and motherduck in prod in th future) using dlt
+
+    1.
+
+    ```
     uv add httpx dlt dlt[duckdb]
     mkdir data
     echo "data/" >> .gitignore
@@ -251,6 +262,42 @@ An app to collect and visualise data related to Zwift racing.
 
     ```
 
+#### Transformation (feat-0002/setup-dbt-to-stage-data-in-dev)
+
+- add ``./profiles.yml``
+
+    ```
+    transform:
+    target: dev
+    outputs:
+      dev:
+        type: duckdb
+        path: data/zwift_analytics.duckdb
+        schema: staging
+        threads: 2
+    ```
+
+- add ``./dbt_profiles.yml``
+
+- add ``./macros/schema_prefix.yml``
+
+- add ``./models/staging/stg_riders.sql``
+
+- add ``./models/staging/stg_riders.yml``
+
+- add ``./models/_sources.yml``
+
+- add ``dbt`` with ``uv add dbt-core dbt-duckdb``
+
+- *optional;* view the data with ``uv run duckdb -ui``
+
+    ```
+    attach 'data/zwift_analytics.duckdb';
+    show all tables;
+    select * from zwift_analytics.staging.stg_riders;
+    .exit
+    ```
+
 ## Tasks
 
 - [x] **feat-0001/setup-ingestion-from-zrapp**
@@ -258,3 +305,7 @@ An app to collect and visualise data related to Zwift racing.
     - Extract from get riders, get clubs and post riders
     - Load all to a raw riders table in duckdb
     - Constrain decimals to be decimals
+- [x] **feat-0002/setup-dbt-to-stage-data-in-dev**
+    - Data needs to be modelled from raw to staging using dbt
+    - Setup dbt project using local duckdb
+    - Select, type and name columns
