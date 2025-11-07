@@ -7,7 +7,7 @@ models:
       tags: ["zrapp", "staging", "riders"]
     columns:
       - name: rider_id
-        description: Unique identifier per rider.
+        description: Unique identifier per rider
         data_tests:
           - not_null
           - unique

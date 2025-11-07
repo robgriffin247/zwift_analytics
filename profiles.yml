@@ -4,5 +4,4 @@ zwift_analytics:
     dev:
       type: duckdb
       path: data/zwift_analytics.duckdb
-      schema: staging
       threads: 2
