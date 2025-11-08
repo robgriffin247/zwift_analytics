@@ -14,4 +14,4 @@ models:
   zwift_analytics:
     staging:
       +schema: staging
-      +materialized: table
+      +materialized: view
