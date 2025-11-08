@@ -470,6 +470,39 @@ dbt is used to transform data into production ready datasets using ``.sql`` file
     .exit
     ```
 
+#### Dev & Production Databases (feat-0003/add-motherduck-as-prod-storage)
+
+1. Create database ``zwift_analytics`` in MotherDuck
+
+1. Add ``MOTHERDUCK_TOKEN="<token>"`` and ``TARGET="dev"`` to ``.env``, and removed ``DLT_DESTINATION`` (the single ``TARGET`` variable will now be used to control this)
+    
+1. Run ``direnv allow``
+
+1. Configure ``profiles.yml``
+
+    ```
+    zwift_analytics:
+      target: "{{ env_var('TARGET') }}"
+      outputs:
+        dev:
+          type: duckdb
+          path: data/zwift_analytics.duckdb
+          threads: 2
+          
+        prod:
+          type: duckdb
+          path: "md:zwift_analytics?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
+          threads: 2
+    ```
+
+
+
+
+- add zrapp_api_key to motherduck secrets
+- configure dlt pipeline destinations (replace the DLT_DESTINATION from env)
+- configure dbt projects
+
+
 ## Tasks
 
 - [x] **feat-0001/setup-ingestion-from-zrapp**
@@ -482,3 +515,7 @@ dbt is used to transform data into production ready datasets using ``.sql`` file
     - Data needs to be modelled from raw to staging using dbt
     - Setup dbt project using local duckdb
     - Select, type and name columns
+
+- [ ] **feat-0003/add-motherduck-as-prod-storage**
+    - Set up so production data is stored in MotherDuck
+    - Configure credentials and dev/prod environments for dlt and dbt

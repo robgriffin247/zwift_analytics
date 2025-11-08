@@ -1,7 +1,12 @@
 zwift_analytics:
-  target: dev
+  target: "{{ env_var('TARGET') }}"
   outputs:
     dev:
       type: duckdb
       path: data/zwift_analytics.duckdb
+      threads: 2
+    
+    prod:
+      type: duckdb
+      path: "md:zwift_analytics?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
       threads: 2
