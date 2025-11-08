@@ -10,8 +10,7 @@ An app to collect and visualise data related to Zwift racing.
 |----|----|
 |Ingestion|dlt & httpx|
 |Transformation|dbt|
-|Storage|DuckDB|
-<!-- |Storage|DuckDB (dev) & MotherDuck (prod)| -->
+|Storage|DuckDB (dev) & MotherDuck (prod)|
 <!-- |Orchestration|Modal| -->
 <!-- |Version Control|Git & GitHub| -->
 <!-- |CI/CD|GitHub Actions| -->
@@ -474,15 +473,15 @@ dbt is used to transform data into production ready datasets using ``.sql`` file
 
 1. Create database ``zwift_analytics`` in MotherDuck
 
-1. Add ``MOTHERDUCK_TOKEN="<token>"`` and ``TARGET="dev"`` to ``.env``, and removed ``DLT_DESTINATION`` (the single ``TARGET`` variable will now be used to control this)
+1. Add ``MOTHERDUCK_TOKEN="<token>"`` and ``TARGET="dev"`` to ``.env``, and remove ``DLT_DESTINATION`` (the single ``TARGET`` variable will now be used to control this)
     
-1. Run ``direnv allow``
+1. Run ``direnv allow`` to update the working environment
 
 1. Configure ``profiles.yml``
 
     ```
     zwift_analytics:
-      target: "{{ env_var('TARGET') }}"
+      target: "{{ env_var('TARGET', 'dev') }}"
       outputs:
         dev:
           type: duckdb
@@ -495,13 +494,70 @@ dbt is used to transform data into production ready datasets using ``.sql`` file
           threads: 2
     ```
 
+1. Reconfigure pipeline in ``ingestion/zrapp.py``
+
+    ```
+    ...
+        """
+        Set dlt destination credentials, specific to dev and prod.
+        """
+        target = os.getenv("TARGET")
+
+        if target == "prod":
+            _destination = dlt.destinations.motherduck(
+                credentials={
+                    "database": "zwift_analytics",
+                    "motherduck_token": os.environ["MOTHERDUCK_TOKEN"],
+                }
+            )
+        elif target == "dev":
+            _destination = dlt.destinations.duckdb(
+                credentials="data/zwift_analytics.duckdb"
+            )
+        else:
+            raise ValueError(
+                "Invalid TARGET; check TARGET is exported with value prod or dev."
+            )
+
+        pipeline = dlt.pipeline(
+            pipeline_name=f"zwift_analytics__zrapp_{target}_pipeline",
+            destination=_destination,
+            dataset_name="zrapp",
+        )
+    ...
+    ```
+
+Note, I also added rounding on the decimals to prevent schema changes:
 
 
+    ```
+    ...
+    from decimal import Decimal, ROUND_HALF_UP
 
-- add zrapp_api_key to motherduck secrets
-- configure dlt pipeline destinations (replace the DLT_DESTINATION from env)
-- configure dbt projects
+    def ingest_zrapp(endpoint, payload) -> LoadInfo:
+        
+        ...
+        
+        DECIMAL_QUANT = Decimal("0.0001")
+        
+        ...
 
+            for f in FLOAT_FIELDS:
+            target = rider
+            parts = f.split("__")
+            for part in parts[:-1]:
+                target = target.get(part)
+                if target is None:
+                    break
+            else:
+                leaf = parts[-1]
+                value = target.get(leaf)
+                if value is not None:
+                    target[leaf] = Decimal(str(value)).quantize(
+                        DECIMAL_QUANT, rounding=ROUND_HALF_UP
+                    )
+        ...
+    ```
 
 ## Tasks
 
@@ -516,6 +572,6 @@ dbt is used to transform data into production ready datasets using ``.sql`` file
     - Setup dbt project using local duckdb
     - Select, type and name columns
 
-- [ ] **feat-0003/add-motherduck-as-prod-storage**
+- [x] **feat-0003/add-motherduck-as-prod-storage**
     - Set up so production data is stored in MotherDuck
     - Configure credentials and dev/prod environments for dlt and dbt

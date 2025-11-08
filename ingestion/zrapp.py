@@ -8,12 +8,14 @@ from typing import Any
 from collections.abc import Iterator
 from dlt.extract import DltResource
 from dlt.common.pipeline import LoadInfo
+from decimal import Decimal, ROUND_HALF_UP
 
 
 def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
     base_url = "https://zwift-ranking.herokuapp.com/public/"
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
+    DECIMAL_QUANT = Decimal("0.0001")
 
     def wait_429(response: httpx.Response) -> int | None:
         """
@@ -81,7 +83,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
                 leaf = parts[-1]
                 value = target.get(leaf)
                 if value is not None:
-                    target[leaf] = Decimal(str(value))
+                    target[leaf] = Decimal(str(value)).quantize(
+                        DECIMAL_QUANT, rounding=ROUND_HALF_UP
+                    )
 
         return rider
 
@@ -186,17 +190,26 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
     """
     Set dlt destination credentials, specific to dev and prod.
     """
-    destination = os.getenv("DLT_DESTINATION")
+    target = os.getenv("TARGET")
 
-    if destination == "duckdb":
+    if target == "prod":
+        _destination = dlt.destinations.motherduck(
+            credentials={
+                "database": "zwift_analytics",
+                "motherduck_token": os.environ["MOTHERDUCK_TOKEN"],
+            }
+        )
+    elif target == "dev":
         _destination = dlt.destinations.duckdb(
             credentials="data/zwift_analytics.duckdb"
         )
-
-    # Add in here for motherduck once setup
+    else:
+        raise ValueError(
+            "Invalid TARGET; check TARGET is exported with value prod or dev."
+        )
 
     pipeline = dlt.pipeline(
-        pipeline_name="zwift_analytics__zrapp_pipeline",
+        pipeline_name=f"zwift_analytics__zrapp_{target}_pipeline",
         destination=_destination,
         dataset_name="zrapp",
     )
@@ -210,9 +223,9 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 
 if __name__ == "__main__":
-    # print(ingest_zrapp("rider", 4598636))
+    print(ingest_zrapp("rider", 4598636))
     # print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
     # print(ingest_zrapp("club", 20650))
     # print(ingest_zrapp("club", 18013))
-    print(ingest_zrapp("club", 2223))
+    # print(ingest_zrapp("club", 2223))
     # print(ingest_zrapp("club", 161))
