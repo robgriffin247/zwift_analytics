@@ -224,4 +224,3 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 if __name__ == "__main__":
     print(ingest_zrapp("rider", 4598636))
-    

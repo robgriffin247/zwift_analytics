@@ -584,6 +584,27 @@ Note, I also added rounding on the decimals to prevent schema changes:
       +materialized: table
     ```
 
+#### Basic Visualisation (feat-0005/basic-streamlit-app)
+
+1. Add Streamlit and Polars (dataframes in Python) packages with ``uv add streamlit polars``
+
+1. Add ``./streamlit/app.py``
+
+1. Created functions to
+
+    - [x] load and cache dim_riders
+    - [x] format a table of riders
+    - [ ] select riders to visualise
+    - [ ] create plots (styled per rider/team) of:
+        - [ ] watts ~ time-interval
+        - [ ] watts/kg ~ time-interval
+        - [ ] score ~ handicap
+        - [ ] score ~ phenotype
+
+
+Note I also made some minor changes to transformations to meet needs (e.g. win/podium rates ``*100`` to make it percent upstream).
+
+
 
 ## Tasks
 
