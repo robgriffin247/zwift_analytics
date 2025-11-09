@@ -6,3 +6,5 @@ target/
 .user.yml
 dbt_packages/
 .dbt/
+*pycache*
+temp.py

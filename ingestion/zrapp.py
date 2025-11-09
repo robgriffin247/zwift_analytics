@@ -224,8 +224,4 @@ def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
 if __name__ == "__main__":
     print(ingest_zrapp("rider", 4598636))
-    # print(ingest_zrapp("riders", [5574, 2822494, 4638424]))
-    # print(ingest_zrapp("club", 20650))
-    # print(ingest_zrapp("club", 18013))
-    # print(ingest_zrapp("club", 2223))
-    # print(ingest_zrapp("club", 161))
+    
