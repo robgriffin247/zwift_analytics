@@ -305,7 +305,7 @@ Data is extracted from zwiftracing.app API (zrapp) using httpx and loaded to duc
 1. Ingest data with ``uv run python3 ingestion/zrapp.py``
 
 
-#### Transformation (feat-0002/setup-dbt-to-stage-data-in-dev)
+#### Transformation: stg_riders (feat-0002/setup-dbt-to-stage-data-in-dev)
 
 dbt is used to transform data into production ready datasets using ``.sql`` files to model data and ``.yml`` for documentation and data tests.
 
@@ -558,6 +558,32 @@ Note, I also added rounding on the decimals to prevent schema changes:
                     )
         ...
     ```
+
+
+#### Transformation: int_riders, dim_riders (feat-0004/create-dim-riders)
+
+1. Added:
+
+    - ``models/intermediate/int_riders.sql``
+    - ``models/intermediate/int_riders.yml``
+    - ``models/core/dim_riders.sql``
+    - ``models/core/dim_riders.yml``
+
+1. Populated ``sql`` with code to transform riders data.
+
+1. Populated ``yml`` with descriptions of riders data.
+
+1. Added intermediate and core schema to ``models`` in ``dbt_project.yml`` 
+
+    ```
+        intermediate:
+        +schema: intermediate
+        +materialized: view
+        core:
+        +schema: core
+        +materialized: table
+    ```
+
 
 ## Tasks
 
