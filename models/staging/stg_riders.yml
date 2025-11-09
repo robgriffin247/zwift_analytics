@@ -81,5 +81,7 @@ models:
         description: ZRapp phenotype score for climber.
       - name: phenotype_timetrialist
         description: ZRapp phenotype score for timetrialist.
+      - name: phenotype
+        description: Peak phenotype (or all-rounder if narrow spread).
       - name: _dlt_load_id
         description: Timestamp of load as unix timestamp.

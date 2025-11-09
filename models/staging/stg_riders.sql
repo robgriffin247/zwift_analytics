@@ -43,6 +43,7 @@ select_type_and_rename as (
     phenotype__scores__pursuiter::decimal as phenotype_pursuiter,
     phenotype__scores__climber::decimal as phenotype_climber,
     phenotype__scores__tt::decimal as phenotype_tt,
+    phenotype__value::varchar as phenotype,
     _dlt_load_id::decimal as _dlt_load_id
   from source
 )

@@ -41,6 +41,7 @@ source as (
     phenotype_pursuiter,
     phenotype_climber,
     phenotype_tt,
+    phenotype,
     _dlt_load_id,
     to_timestamp(_dlt_load_id) as data_load_timestamp,
   from {{ ref("stg_riders") }}
