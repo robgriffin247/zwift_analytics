@@ -607,3 +607,10 @@ Note, I also added rounding on the decimals to prevent schema changes:
     - No major remodelling planned, just a handful of new columns for proof of concept
     - Convert ``_dlt_load_id`` to ``data_load_timestamp``
     - Complete schema ``yml`` files
+
+- [ ] **feat-0005/basic-streamlit-app**
+    - Create a basic front end
+    - Load data from MotherDuck with caching
+    - Rider selector into two teams
+    - Summary table
+    - Plots of power, phenotype and handicap
