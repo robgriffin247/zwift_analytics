@@ -576,12 +576,12 @@ Note, I also added rounding on the decimals to prevent schema changes:
 1. Added intermediate and core schema to ``models`` in ``dbt_project.yml`` 
 
     ```
-        intermediate:
-        +schema: intermediate
-        +materialized: view
-        core:
-        +schema: core
-        +materialized: table
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    core:
+      +schema: core
+      +materialized: table
     ```
 
 
