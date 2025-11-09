@@ -575,3 +575,9 @@ Note, I also added rounding on the decimals to prevent schema changes:
 - [x] **feat-0003/add-motherduck-as-prod-storage**
     - Set up so production data is stored in MotherDuck
     - Configure credentials and dev/prod environments for dlt and dbt
+
+- [x] **feat-0004/create-dim-riders**
+    - Finish taking data from staging to a dimension table
+    - No major remodelling planned, just a handful of new columns for proof of concept
+    - Convert ``_dlt_load_id`` to ``data_load_timestamp``
+    - Complete schema ``yml`` files

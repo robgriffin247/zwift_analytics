@@ -1,10 +1,10 @@
 version: 2
 
 models: 
-  - name: stg_riders
-    description: Riders data from zrapp, staged to select columns, set types and rename.
+  - name: dim_riders
+    description: Production ready rider data.
     config:
-      tags: ["zrapp", "staging", "riders"]
+      tags: ["zrapp", "core", "dim", "riders"]
     columns:
       - name: rider_id
         description: Unique identifier per rider
@@ -29,6 +29,8 @@ models:
         description: Rider weight in kilograms.
       - name: ftp_watts
         description: Estimated FTP in Watts.
+      - name: ftp_watts_kg
+        description: Estimated FTP in Watts/kg.
       - name: watts_5s
         description: Peak 5-second power output during last 90 days, in Watts.
       - name: watts_15s
@@ -63,6 +65,10 @@ models:
         description: Races won in last 90 days.
       - name: race_podiums
         description: Top three finishes in last 90 days.
+      - name: race_win_rate
+        description: Proportion of races won in last 90 days.
+      - name: race_podium_rate
+        description: Proportion of races with podium finish in last 90 days.
       - name: handicap_flat
         description: ZRapp handicap score for flat races.
       - name: handicap_rolling
@@ -83,3 +89,5 @@ models:
         description: ZRapp phenotype score for timetrialist.
       - name: _dlt_load_id
         description: Timestamp of load as unix timestamp.
+      - name: data_load_timestamp
+        description: _dlt_load_id as a human readable timestamp.
