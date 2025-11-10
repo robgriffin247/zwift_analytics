@@ -594,7 +594,8 @@ Note, I also added rounding on the decimals to prevent schema changes:
 
     - [x] load and cache dim_riders
     - [x] format a table of riders
-    - [ ] select riders to visualise
+    - [x] select riders to visualise
+        - [ ] add id number bulk selection
     - [ ] create plots (styled per rider/team) of:
         - [ ] watts ~ time-interval
         - [ ] watts/kg ~ time-interval

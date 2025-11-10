@@ -13,6 +13,8 @@ models:
           - unique
       - name: rider
         description: Rider display name.
+      - name: rider_search_string
+        description: Rider display name and ID for unique searching.
       - name: club_id
         description: Club ID.
       - name: club
@@ -21,6 +23,8 @@ models:
         description: Peak vELO score during last 90 days.
       - name: velo_90_day_peak_category
         description: Category associated with velo_90_day_peak.
+      - name: velo_90_day_peak_category_short
+        description: Short version of category associated with velo_90_day_peak.
       - name: velo_90_day_peak_category_number
         description: Category rank associated with velo_90_day_peak.
       - name: zwift_category

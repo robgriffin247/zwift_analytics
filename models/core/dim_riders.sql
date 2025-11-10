@@ -4,10 +4,12 @@ source as (
   select
     rider_id,
     rider,
+    rider_search_string,
     club_id,
     club,
     velo_90_day_peak,
     velo_90_day_peak_category,
+    velo_90_day_peak_category_short,
     velo_90_day_peak_category_number,
     zwift_category,
     weight_kg,
