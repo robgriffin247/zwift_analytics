@@ -13,7 +13,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 def ingest_zrapp(endpoint, payload) -> LoadInfo:
 
-    base_url = "https://zwift-ranking.herokuapp.com/public/"
+    base_url = os.getenv("ZRAPP_API_URL")
     header = {"Authorization": os.getenv("ZRAPP_API_KEY")}
     DECIMAL_QUANT = Decimal("0.0001")
 

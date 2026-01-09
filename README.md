@@ -15,8 +15,7 @@ An app to collect and visualise data related to Zwift racing.
 <!-- |Version Control|Git & GitHub| -->
 <!-- |CI/CD|GitHub Actions| -->
 
-
-## DevLog
+## Run the project
 
 #### Prerequisites
 
@@ -28,6 +27,25 @@ An app to collect and visualise data related to Zwift racing.
 - MotherDuck account
 - ZwiftRacing.app API token
 
+#### Setup 
+
+1. ``git clone git@github.com:robgriffin247/zwift_analytics.git``
+1. ``cp .env_template .env``
+1. Add the required values to ``.env``
+1. ``direnv allow`` (to export the variables to environment)
+1. ``uv sync``
+1. ``mkdir data``
+
+#### Usage
+
+- Ingest data: ``uv run ingestion/zrapp.py``
+- Transform data: ``uv run dbt build``
+- Explore data withg ``duckdb``
+- Switch between ``dev`` and ``prod`` with ``export TARGET="<env>"``
+
+
+
+## Development Log
 
 #### Setup 
 
