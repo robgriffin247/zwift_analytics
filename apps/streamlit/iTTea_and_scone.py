@@ -26,7 +26,6 @@ st.header("iTTea & Scone")
 tab_leaderboard, tab_results = st.tabs(["Leaderboard", "Results"])
 
 with tab_leaderboard:
-    leaderboard_container = st.container()
     c1, c2, c3 = st.columns([2,2,6])
     selected_cats = c1.selectbox("Category", options=["All", "B", "C", "D"])
 
@@ -39,7 +38,7 @@ with tab_leaderboard:
         pl.int_range(1, pl.len() + 1).alias("rank")
     )
 
-    leaderboard_container.dataframe(leaderboard[["rank", "rider", "category", "races", "total_time"]], 
+    st.dataframe(leaderboard[["rank", "rider", "category", "races", "total_time"]], 
         column_config={
             "rank":st.column_config.NumberColumn("Rank", width="small"),
             "rider":st.column_config.TextColumn("Rider"),
