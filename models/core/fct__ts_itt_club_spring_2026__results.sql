@@ -45,6 +45,13 @@ add_categories as (
     from results 
         left join categories using(rider_id)
         left join velo_cats using(rider_id)
+),
+
+add_best_effort as (
+    select
+        *,
+        row_number() over (partition by rider_id, stage order by race_seconds)=1 as is_best_effort
+    from add_categories
 )
 
-select * from add_categories order by rider, stage
+select * from add_best_effort order by rider, stage

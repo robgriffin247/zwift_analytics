@@ -10,7 +10,8 @@ best_results as (
         velo_start,
         velo_start_category,
         race_seconds
-    from {{ ref("fct__ts_itt_club_spring_2026__best_results") }}
+    from {{ ref("fct__ts_itt_club_spring_2026__results") }}
+    where is_best_effort
 ),
 
 leaderboard as (
