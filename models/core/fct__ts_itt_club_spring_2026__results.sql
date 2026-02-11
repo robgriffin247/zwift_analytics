@@ -3,8 +3,10 @@ with
 results as (
     select
         event_id,
-        event,
+        stage,
+        stage_name,
         event_start_epoch,
+        to_timestamp(event_start_epoch::int) as event_start_datetime,
         rider_id,
         rider,
         velo_before,
@@ -45,4 +47,4 @@ add_categories as (
         left join velo_cats using(rider_id)
 )
 
-select * from add_categories
+select * from add_categories order by rider, stage

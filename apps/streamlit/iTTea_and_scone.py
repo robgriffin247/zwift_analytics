@@ -18,10 +18,12 @@ else:
 
 with duckdb.connect(database) as con:
     results = con.sql("select * from core.fct__ts_itt_club_spring_2026__results").pl()
+    best_results = con.sql("select * from core.fct__ts_itt_club_spring_2026__best_results").pl()
     leaderboard = con.sql("select * from core.fct__ts_itt_club_spring_2026__leaderboard").pl()
 
+st.header("iTTea & Scone")
 
-tab_leaderboard, tab_results = st.tabs(["Leaderboard", "Results"])
+tab_leaderboard, tab_best_results, tab_results = st.tabs(["Leaderboard", "Best Efforts", "All Results"])
 
 tab_leaderboard.dataframe(leaderboard[["rider", "category", "races", "total_time"]], 
     column_config={
@@ -32,4 +34,26 @@ tab_leaderboard.dataframe(leaderboard[["rider", "category", "races", "total_time
     }
 )
 
-tab_results.dataframe(results[["event", "event_start_epoch", "rider", "category", "race_speed", "race_time"]])
+tab_best_results.dataframe(best_results[["stage", "stage_name", "event_start_datetime", "rider", "category", "race_speed", "race_time"]],
+    column_config={
+        "stage":st.column_config.NumberColumn("Stage"),
+        "stage_name":st.column_config.TextColumn("Route"),
+        "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D MMM, h:mm a"),
+        "rider":st.column_config.TextColumn("Rider"),
+        "category":st.column_config.TextColumn("Cat."),
+        "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
+        "race_time":st.column_config.TextColumn("Time"),
+    }
+)
+
+tab_results.dataframe(results[["stage", "stage_name", "event_start_datetime", "rider", "category", "race_speed", "race_time"]],
+    column_config={
+        "stage":st.column_config.NumberColumn("Stage"),
+        "stage_name":st.column_config.TextColumn("Route"),
+        "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D MMM, h:mm a"),
+        "rider":st.column_config.TextColumn("Rider"),
+        "category":st.column_config.TextColumn("Cat."),
+        "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
+        "race_time":st.column_config.TextColumn("Time"),
+    }
+)

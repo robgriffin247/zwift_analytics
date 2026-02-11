@@ -2,7 +2,8 @@ with
 
 best_results as (
     select 
-        event,
+        stage,
+        stage_name,
         rider_id,
         rider,
         category,

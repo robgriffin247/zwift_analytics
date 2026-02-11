@@ -38,15 +38,26 @@ results as (
     from {{ ref("stg__zwift_racing__results") }}
 ),
 
+stages as (
+    select
+        event,
+        stage_name,
+        stage
+    from {{ ref("int__stages") }}
+),
+
 results_with_event_details as (
     select 
         gs_events.league_id,
         zr_events.* exclude(_dlt_id),
+        stages.stage,
+        stages.stage_name,
         results.* exclude(_dlt_parent_id),
         zr_events.event_distance / results.race_seconds * 3600 as race_speed
     from results
         left join zr_events on results._dlt_parent_id=zr_events._dlt_id
         left join gs_events using(event_id)
+        left join stages using(event)
 ),
 
 results_with_velo_cats as (

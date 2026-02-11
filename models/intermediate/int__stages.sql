@@ -9,6 +9,6 @@ round_first_race as (
 
 select 
     event, 
-    replace(event, 'Zwift TT Club Racing - ', '') as round_name, 
-    row_number() over (order by event_start_epoch) as round 
+    replace(event, 'Zwift TT Club Racing - ', '') as stage_name, 
+    row_number() over (order by event_start_epoch) as stage 
 from round_first_race

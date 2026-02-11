@@ -2,7 +2,9 @@ with
 
 results as (
     select 
-        event,
+        stage,
+        stage_name,
+        event_start_datetime,
         rider_id,
         rider,
         category,
@@ -19,7 +21,7 @@ results as (
 best_efforts as (
     select * 
     from results 
-    qualify row_number() over (partition by rider_id, event order by race_seconds)=1
+    qualify row_number() over (partition by rider_id, stage order by race_seconds)=1
 )
 
-select * from best_efforts
+select * from best_efforts order by rider, stage
