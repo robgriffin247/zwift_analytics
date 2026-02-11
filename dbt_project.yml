@@ -5,6 +5,7 @@ profile: 'zwift_analytics'
 
 model-paths: ["models"]
 macro-paths: ["macros"]
+seed-paths: ["seeds"]
 
 clean-targets:
   - "target"

@@ -1,9 +1,46 @@
 version: 2
 
 sources:
-  - name: zrapp
-    description: Raw zwiftracing.app API data
-    schema: zrapp
+  - name: google_sheets
+    description: Data from user inputs
+    schema: google_sheets
     tables:
+    
+      - name: events
+        description: Event details
+        columns:
+          - name: event_id
+            description: Unique event identifier as used by Zwift
+            data_tests:
+              - not_null
+              - unique
+    
       - name: riders
-        description: Raw rider data including characteristics, power, phenotypes, ratings and handicaps.
+        description: Rider ids to be used
+        columns:
+          - name: rider_id
+            description: Unique rider identifier as used by Zwift
+            data_tests:
+              - not_null
+              - unique
+
+  - name: zwift_racing
+    description: Data from ZwiftRacing.app API
+    schema: zwift_racing
+    tables:
+
+      - name: event_results
+        description: Event details
+        columns:
+          - name: event_id
+            description: Unique event identifier as used by Zwift
+            data_tests:
+              - not_null
+              - unique
+
+      - name: event_results__results
+        description: Event results within the zwift_racing.event_results table
+        columns:
+          - name: _dlt_parent_id
+            description: Identifies the event in event_results
+

@@ -1,5 +1,11 @@
 # Zwift Analytics
 
+## To Do:
+
+- [ ] Front end for T&S iTT club
+- [ ] Daily discord update to T&S iTT Channel
+- [ ] Implement CI/CD flows in GitHub actions
+
 ## Overview
 
 An app to collect and visualise data related to Zwift racing.
@@ -11,8 +17,8 @@ An app to collect and visualise data related to Zwift racing.
 |Ingestion|dlt & httpx|
 |Transformation|dbt|
 |Storage|DuckDB (dev) & MotherDuck (prod)|
-<!-- |Orchestration|Modal| -->
-<!-- |Version Control|Git & GitHub| -->
+|Orchestration|Modal|
+|Version Control|Git & GitHub|
 <!-- |CI/CD|GitHub Actions| -->
 
 ## Run the project
@@ -38,13 +44,15 @@ An app to collect and visualise data related to Zwift racing.
 
 #### Usage
 
-- Ingest data: ``uv run ingestion/zrapp.py``
+- Ingest data: ``uv run ingestion/zwiftracing.py``
 - Transform data: ``uv run dbt build``
 - Explore data withg ``duckdb``
-- Switch between ``dev`` and ``prod`` with ``export TARGET="<env>"``
+- Switch between ``dev``, ``test`` and ``prod`` with ``export TARGET="<env>"``
 
 
 
+
+<!--
 ## Development Log
 
 #### Setup 
@@ -82,7 +90,7 @@ An app to collect and visualise data related to Zwift racing.
 
 #### Ingestion (feat-0001/setup-ingestion-from-zrapp)
 
-<!-- TODO: fix up these notes -->
+<!-- TODO: fix up these notes 
 
 Data is extracted from zwiftracing.app API (zrapp) using httpx and loaded to duckdb (and motherduck in prod in th future) using dlt
 
@@ -625,3 +633,4 @@ Note, I also added rounding on the decimals to prevent schema changes:
     - No major remodelling planned, just a handful of new columns for proof of concept
     - Convert ``_dlt_load_id`` to ``data_load_timestamp``
     - Complete schema ``yml`` files
+    -->

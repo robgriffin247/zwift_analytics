@@ -3,10 +3,13 @@ zwift_analytics:
   outputs:
     dev:
       type: duckdb
-      path: data/zwift_analytics.duckdb
+      path: data/zwift_analytics_dev.duckdb
       threads: 2
-    
+    test:
+      type: duckdb
+      path: "md:zwift_analytics_test?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
+      threads: 2
     prod:
       type: duckdb
-      path: "md:zwift_analytics?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
+      path: "md:zwift_analytics_prod?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
       threads: 2
