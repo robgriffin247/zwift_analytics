@@ -25,14 +25,30 @@ st.header("iTTea & Scone")
 
 tab_leaderboard, tab_results = st.tabs(["Leaderboard", "Results"])
 
-tab_leaderboard.dataframe(leaderboard[["rider", "category", "races", "total_time"]], 
-    column_config={
-        "rider":st.column_config.TextColumn("Rider"),
-        "category":st.column_config.TextColumn("Cat."),
-        "races":st.column_config.NumberColumn("Races"),
-        "total_time":st.column_config.TextColumn("Total Time"),
-    }
-)
+with tab_leaderboard:
+    c1, c2, c3 = st.columns([2,2,6])
+    selected_cats = c1.selectbox("Category", options=["All", "B", "C", "D"])
+
+    if selected_cats=="All":
+        pass
+    else:
+        leaderboard = leaderboard.filter(pl.col("category").is_in([selected_cats]))
+
+    leaderboard = leaderboard.with_columns(
+        pl.int_range(1, pl.len() + 1).alias("rank")
+    )
+
+    st.dataframe(leaderboard[["rank", "rider", "category", "races", "total_time"]], 
+        column_config={
+            "rank":st.column_config.NumberColumn("Rank", width="small"),
+            "rider":st.column_config.TextColumn("Rider"),
+            "category":st.column_config.TextColumn("Cat.", width="small"),
+            "races":st.column_config.NumberColumn("Races", width="small"),
+            "total_time":st.column_config.TextColumn("Total Time", width="small"),
+        },
+    )
+
+
 
 tab_results.dataframe(results[["stage", "stage_name", "event_start_datetime", "rider", "category", "race_speed", "race_time", "is_best_effort"]],
     column_config={
