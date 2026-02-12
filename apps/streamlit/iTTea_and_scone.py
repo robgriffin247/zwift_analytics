@@ -81,16 +81,41 @@ elif target=="dev":
 else:
     raise ValueError(f"Invalid TARGET value in environment; expected 'prod', 'test' or 'dev', got '{target}'")
 
-with duckdb.connect(database) as con:
+
+
+@st.cache_resource(show_spinner="Establishing database connection")
+def get_db_connection():
+    return duckdb.connect(database, read_only=False)
+
+cache_data_hours = 1
+
+@st.cache_data(
+    ttl= cache_data_hours * 60 * 60,
+    max_entries=10,
+    show_spinner="Loading data from database",
+)
+def load_data():
+    con = get_db_connection()
     results = con.sql("select *, event_start_epoch from core.fct__ts_itt_club_spring_2026__results").pl()
     leaderboard = con.sql("select * from core.fct__ts_itt_club_spring_2026__leaderboard").pl()
-    unique_riders = results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list()
-    unique_cats = results[["category"]].unique().sort(by=pl.col("category"))["category"].to_list()
-    unique_stages = results[["stage"]].unique().sort(by=pl.col("stage"))["stage"].to_list()
+
+    return [results, leaderboard]
+
 
 st.header("iTTea & Scone")
 
 tab_leaderboard, tab_results, tab_convert = st.tabs(["Leaderboard", "Results", "Add Events"])
+
+
+
+results, leaderboard = load_data()
+
+unique_riders = results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list()
+unique_cats = results[["category"]].unique().sort(by=pl.col("category"))["category"].to_list()
+unique_stages = results[["stage"]].unique().sort(by=pl.col("stage"))["stage"].to_list()
+
+
+
 
 with tab_leaderboard:
     
@@ -123,7 +148,6 @@ with tab_leaderboard:
             "gap":st.column_config.TextColumn("Gap", width="small"),
         },
     )
-
 
 with tab_results:
     
