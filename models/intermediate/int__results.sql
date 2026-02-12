@@ -43,7 +43,8 @@ stages as (
     select
         event,
         stage_name,
-        stage
+        stage,
+        stage_distance
     from {{ ref("int__stages") }}
 ),
 
@@ -53,6 +54,7 @@ results_with_event_details as (
         zr_events.* exclude(_dlt_id),
         stages.stage,
         stages.stage_name,
+        stages.stage_distance,
         results.* exclude(_dlt_parent_id),
         zr_events.event_distance / results.race_seconds * 3600 as race_speed,
         {{ format_seconds_to_time("race_seconds", false) }} as race_time

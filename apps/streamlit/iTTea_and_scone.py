@@ -3,6 +3,14 @@ import streamlit as st
 import duckdb
 import polars as pl
 
+def seconds_to_hhmmss(seconds: float) -> str:
+    total = int(round(seconds))
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+
+    if total >= 3600:
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+    return f"{minutes:02d}:{secs:02d}"
 
 st.html(
     """
@@ -16,10 +24,6 @@ st.html(
             font-size: 0
             padding: 15px;
             border-radius: 5px;
-        }
-        
-        p {
-            font-size: 16px !important
         }
         
         .stMetric:hover {
@@ -121,3 +125,8 @@ with tab_results:
             "is_best_effort":st.column_config.CheckboxColumn("Best"),
         }
     )
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
+    c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
+    c3.metric("Efforts", results.shape[0], border=True)

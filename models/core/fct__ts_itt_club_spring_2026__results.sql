@@ -5,6 +5,7 @@ results as (
         event_id,
         stage,
         stage_name,
+        stage_distance,
         event_start_epoch,
         event_start_datetime,
         rider_id,
