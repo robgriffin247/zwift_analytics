@@ -26,6 +26,7 @@ st.html(
 """
 )
 
+
 st.set_page_config(page_title="iTTea & Scone")
 
 main_page = st.Page("pages/main.py", title="Home")
