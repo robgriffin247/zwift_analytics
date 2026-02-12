@@ -42,4 +42,4 @@ formatted_leaderboard as (
     from add_gap
 )
 
-select * from formatted_leaderboard
+select * from formatted_leaderboard order by races desc, total_seconds

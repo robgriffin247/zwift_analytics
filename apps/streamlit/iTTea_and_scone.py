@@ -44,7 +44,7 @@ else:
     raise ValueError(f"Invalid TARGET value in environment; expected 'prod', 'test' or 'dev', got '{target}'")
 
 with duckdb.connect(database) as con:
-    results = con.sql("select * from core.fct__ts_itt_club_spring_2026__results").pl()
+    results = con.sql("select *, event_start_epoch from core.fct__ts_itt_club_spring_2026__results").pl()
     leaderboard = con.sql("select * from core.fct__ts_itt_club_spring_2026__leaderboard").pl()
     unique_riders = results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list()
     unique_cats = results[["category"]].unique().sort(by=pl.col("category"))["category"].to_list()
@@ -109,11 +109,11 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.dataframe(results[["stage", "stage_name", "event_start_epoch", "rider", "category", "race_speed", "race_time", "is_best_effort"]],
+    st.dataframe(results[["stage", "stage_name", "event_start_datetime", "rider", "category", "race_speed", "race_time", "is_best_effort"]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
             "stage_name":st.column_config.TextColumn("Route"),
-            "event_start_epoch":st.column_config.DatetimeColumn("Date/Time", format="D MMM, h:mm a"),
+            "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D/M/YY HH:MM"),
             "rider":st.column_config.TextColumn("Rider"),
             "category":st.column_config.TextColumn("Cat."),
             "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),

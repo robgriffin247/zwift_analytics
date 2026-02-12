@@ -6,6 +6,7 @@ results as (
         stage,
         stage_name,
         event_start_epoch,
+        event_start_datetime,
         rider_id,
         rider,
         velo,

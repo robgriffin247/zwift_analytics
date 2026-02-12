@@ -10,6 +10,7 @@ zr_events as (
     select
         event_id,
         event_start_epoch,
+        to_timestamp(event_start_epoch::int) as event_start_datetime,
         event_distance,
         event,
         _dlt_id
