@@ -73,7 +73,7 @@ with tab_leaderboard:
         pl.int_range(1, pl.len() + 1).alias("rank")
     )
 
-    st.dataframe(leaderboard[["rank", "rider", "category", "velo_first", "velo_first_category", "races", "total_time"]], 
+    st.dataframe(leaderboard[["rank", "rider", "category", "velo_first", "velo_first_category", "races", "total_time", "gap"]], 
         column_config={
             "rank":st.column_config.NumberColumn("Rank", width="small"),
             "rider":st.column_config.TextColumn("Rider"),
@@ -82,6 +82,7 @@ with tab_leaderboard:
             "velo_first_category":st.column_config.TextColumn("Velo Cat."),
             "races":st.column_config.NumberColumn("Races", width="small"),
             "total_time":st.column_config.TextColumn("Total Time", width="small"),
+            "gap":st.column_config.TextColumn("Gap", width="small"),
         },
     )
 

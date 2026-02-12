@@ -28,11 +28,18 @@ leaderboard as (
     order by races desc, total_seconds
 ),
 
+add_gap as (
+    select *,
+        total_seconds - min(total_seconds) over (partition by races order by races desc, total_seconds) as gap 
+    from leaderboard
+),
+
 formatted_leaderboard as (
     select 
-        *,
-        {{ format_seconds_to_time("total_seconds") }} as total_time
-    from leaderboard
+        * exclude(gap),
+        {{ format_seconds_to_time("total_seconds") }} as total_time,
+        case when gap=0 then ' ' else '+ ' || {{ format_seconds_to_time("gap", false) }} end as gap
+    from add_gap
 )
 
 select * from formatted_leaderboard
