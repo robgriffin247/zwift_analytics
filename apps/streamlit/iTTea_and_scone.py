@@ -109,15 +109,15 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.dataframe(results[["stage", "stage_name", "event_start_datetime", "rider", "category", "race_speed", "race_time", "is_best_effort"]],
+    st.dataframe(results[["stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
-            "stage_name":st.column_config.TextColumn("Route"),
-            "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D/M/YY HH:MM"),
             "rider":st.column_config.TextColumn("Rider"),
             "category":st.column_config.TextColumn("Cat."),
-            "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
+            "stage_name":st.column_config.TextColumn("Route"),
+            "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D/M/YY HH:MM"),
             "race_time":st.column_config.TextColumn("Time"),
+            "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
             "is_best_effort":st.column_config.CheckboxColumn("Best"),
         }
     )
