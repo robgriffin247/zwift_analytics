@@ -7,8 +7,8 @@ best_results as (
         rider_id,
         rider,
         category,
-        velo_start,
-        velo_start_category,
+        velo_first,
+        velo_first_category,
         race_seconds
     from {{ ref("fct__ts_itt_club_spring_2026__results") }}
     where is_best_effort
@@ -19,8 +19,8 @@ leaderboard as (
         rider_id, 
         rider,
         category,
-        velo_start,
-        velo_start_category,    
+        velo_first,
+        velo_first_category,    
         count(*) as races, 
         sum(race_seconds) as total_seconds
     from best_results

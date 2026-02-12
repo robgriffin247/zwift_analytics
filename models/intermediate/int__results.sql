@@ -31,7 +31,7 @@ results as (
         rider_id,
         category_raced,
         race_seconds,
-        velo_before,
+        velo,
         velo_after,
         velo_90_day_max,
         _dlt_parent_id
@@ -53,7 +53,8 @@ results_with_event_details as (
         stages.stage,
         stages.stage_name,
         results.* exclude(_dlt_parent_id),
-        zr_events.event_distance / results.race_seconds * 3600 as race_speed
+        zr_events.event_distance / results.race_seconds * 3600 as race_speed,
+        {{ format_seconds_to_time("race_seconds", false) }} as race_time
     from results
         left join zr_events on results._dlt_parent_id=zr_events._dlt_id
         left join gs_events using(event_id)
@@ -65,7 +66,7 @@ results_with_velo_cats as (
         results_with_event_details.*,
         velo_cats.category as velo_category
     from results_with_event_details
-        left join (select * from velo_cats where not womens) as velo_cats on results_with_event_details.velo_before between velo_cats.min and velo_cats.max
+        left join (select * from velo_cats where not womens) as velo_cats on results_with_event_details.velo between velo_cats.min and velo_cats.max
 )
 
 select * from results_with_velo_cats

@@ -6,14 +6,13 @@ results as (
         stage,
         stage_name,
         event_start_epoch,
-        to_timestamp(event_start_epoch::int) as event_start_datetime,
         rider_id,
         rider,
-        velo_before,
+        velo,
         velo_category,
         category_raced,
         race_seconds,
-        {{ format_seconds_to_time("race_seconds") }} as race_time,
+        race_time,
         race_speed
     from {{ ref("int__results") }}
     where league_id in (3165) and rider_id in (select rider_id from {{ ref("stg__google_sheets__riders") }})
@@ -30,8 +29,8 @@ categories as (
 velo_cats as (
     select
         rider_id,
-        velo_before as velo_start,
-        velo_category as velo_start_category,
+        velo as velo_first,
+        velo_category as velo_first_category,
     from results
     qualify row_number() over (partition by rider_id order by event_start_epoch)=1
 ),
@@ -40,8 +39,8 @@ add_categories as (
     select
         results.*,
         categories.category,
-        velo_cats.velo_start,
-        velo_cats.velo_start_category,
+        velo_cats.velo_first,
+        velo_cats.velo_first_category,
     from results 
         left join categories using(rider_id)
         left join velo_cats using(rider_id)

@@ -11,8 +11,16 @@ IMAGE = (
     )
     # modal code
     .add_local_file(PROJECT_ROOT / "modal/jobs.py", "/root/jobs.py")
+    .add_local_file(PROJECT_ROOT / "modal/dbt_runner.py", "/root/dbt_runner.py")
     # ingestion code
     .add_local_dir(PROJECT_ROOT / "ingestion", "/root/ingestion")
+    # dbt folders
+    .add_local_dir(PROJECT_ROOT / "models", "/root/models")
+    .add_local_dir(PROJECT_ROOT / "macros", "/root/macros")
+    .add_local_dir(PROJECT_ROOT / "seeds", "/root/seeds")
+    # dbt files
+    .add_local_file(PROJECT_ROOT / "dbt_project.yml", "/root/dbt_project.yml")
+    .add_local_file(PROJECT_ROOT / "profiles.yml", "/root/profiles.yml")
 )
 
 dlt_volume = modal.Volume.from_name("zwift-analytics-dlt-state", create_if_missing=True)

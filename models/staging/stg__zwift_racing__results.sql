@@ -4,7 +4,7 @@ with source as (
         name::varchar as rider,
         category::varchar as category_raced,
         time::float as race_seconds,
-        rating_before::float as velo_before,
+        rating_before::float as velo,
         rating::float as velo_after,
         rating_max90::float as velo_90_day_max,
         _dlt_parent_id::varchar as _dlt_parent_id

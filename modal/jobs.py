@@ -2,6 +2,8 @@ import os
 import duckdb
 import time
 
+from dbt_runner import build_models
+
 from ingestion.google_sheets import get_events, get_riders
 from ingestion.zwift_racing import run_pipeline, get_event_results, post_riders
 
@@ -63,16 +65,20 @@ def get_event_results_job():
             where event_id not in (select event_id from loaded_events)
             """).pl()["event_id"].to_list()
     
-    i = 0
-    print(f"Identified {len(event_ids)} events to load!")
-    for event in event_ids:
-        print(f"Getting event {event}")
-        if i>=1:
-            print("Waiting to run api request...")
-            time.sleep(70)
-        i+=1
+    if len(event_ids)>0:
+        i = 0
+        print(f"Identified {len(event_ids)} events to load!")
+        for event in event_ids:
+            print(f"Getting event {event}")
+            if i>=1:
+                print("Waiting to run api request...")
+                time.sleep(70)
+            i+=1
 
-        print(run_pipeline(get_event_results(event)))
+            print(run_pipeline(get_event_results(event)))
+
+        build_models()
+
     
 if __name__=="__main__":
     get_event_results_job()
