@@ -27,7 +27,7 @@ velo_cats as (
 ),
 
 results as (
-    select
+    select 
         rider,
         rider_id,
         category_raced,
@@ -70,6 +70,13 @@ results_with_velo_cats as (
         velo_cats.category as velo_category
     from results_with_event_details
         left join (select * from velo_cats where not womens) as velo_cats on results_with_event_details.velo between velo_cats.min and velo_cats.max
+),
+
+latest_rider_name as (
+    select 
+        * exclude(rider),
+        last(rider) over (partition by rider_id order by event_start_epoch rows between unbounded preceding and unbounded following) as rider
+    from results_with_velo_cats
 )
 
-select * from results_with_velo_cats
+select * from latest_rider_name
