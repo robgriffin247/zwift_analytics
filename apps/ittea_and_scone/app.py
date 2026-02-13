@@ -54,7 +54,7 @@ else:
 def get_db_connection():
     return duckdb.connect(database, read_only=False)
 
-cache_data_hours = 1
+cache_data_hours = 0.25
 
 @st.cache_data(
     ttl= cache_data_hours * 60 * 60,
