@@ -76,7 +76,7 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.dataframe(results[["stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
+    st.dataframe(results[["event_id", "stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
             "rider":st.column_config.TextColumn("Rider"),
@@ -92,4 +92,14 @@ with tab_results:
     c1, c2, c3 = st.columns(3)
     c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
     c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts", results.shape[0] - (0.5 if 5083506 in results["rider_id"].to_list() else 0), border=True)
+    c3.metric("Efforts",
+        int(count) if (count := results.with_columns(
+            pl.when((pl.col("rider_id") == 5083506) & (pl.col("event_id") == 5393497))
+            .then(0.5)
+            .otherwise(1.0)
+            .alias("weight")
+        ).select(pl.col("weight").sum()).item()) == int(count) else count
+        , border=True
+    )
+        # 5083506
+        # 5393497
