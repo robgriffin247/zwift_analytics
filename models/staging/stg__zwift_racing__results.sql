@@ -1,7 +1,7 @@
 with source as (
     select
         rider_id::int as rider_id,
-        name::varchar as rider,
+        trim(name::varchar) as rider,
         category::varchar as category_raced,
         time::float as race_seconds,
         rating_before::float as velo,

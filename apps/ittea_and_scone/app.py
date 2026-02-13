@@ -3,6 +3,8 @@ import streamlit as st
 import duckdb
 import polars as pl
 
+
+# Page Setup
 st.html(
     """
 <style>
@@ -29,11 +31,13 @@ st.html(
 
 st.set_page_config(page_title="iTTea & Scone")
 
-main_page = st.Page("pages/main.py", title="Home")
-data_input_page = st.Page("pages/data_input.py", title="Add Events")
+main_page = st.Page("pages/main.py", title="Home", icon="🏆")
+data_input_page = st.Page("pages/data_input.py", title="Add Events", icon=":material/add_circle:")
 
 st.header("iTTea & Scone")
 
+
+# Data load
 target = os.getenv("TARGET")
 motherduck_token = os.getenv("MOTHERDUCK_TOKEN")
 
@@ -64,8 +68,11 @@ def load_data():
 
     return [results, leaderboard]
 
-st.session_state["results"], st.session_state["leaderboard"] = load_data()
+if "results" not in st.session_state or "leaderboard" not in st.session_state:
+    st.session_state["results"], st.session_state["leaderboard"] = load_data()
 
 
+
+# Run pages
 pg = st.navigation([main_page, data_input_page])
 pg.run()

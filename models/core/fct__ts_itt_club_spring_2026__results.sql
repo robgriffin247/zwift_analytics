@@ -9,7 +9,7 @@ results as (
         event_start_epoch,
         event_start_datetime,
         rider_id,
-        rider,
+        case when rider_id=292691 then rider||' ❤️ England' else rider end as rider,
         velo,
         velo_category,
         category_raced,

@@ -22,17 +22,19 @@ tab_leaderboard, tab_results = st.tabs(["Leaderboard", "Results"])
 
 with tab_leaderboard:
     
+    medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
     st.markdown("##### The Sausage-Roll of Honour, sponsored by Greggs")
     cols = st.columns(len(unique_cats), border=True)
     for i, cat in enumerate(unique_cats):
         with cols[i]:
-            st.markdown(
-                f"""
-                ###### {cat} Cat 🏆
-                ##### {leaderboard.filter(pl.col("category")==cat)["rider"].to_list()[0]}
-                """
-            )
-            st.write("")
+            leaders = leaderboard.filter(pl.col("category")==cat)["rider"].to_list()
+            for j, medal in enumerate(medals):
+                if j<len(leaders):
+                    st.markdown(
+                        f"""
+                        {'**' if j==0 else ''}{medals[j]} {leaders[j]}{'**' if j==0 else ''}
+                        """
+                    )
 
     st.markdown("##### Current Leaderboard")
     leaderboard = leaderboard.with_columns(
@@ -90,4 +92,4 @@ with tab_results:
     c1, c2, c3 = st.columns(3)
     c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
     c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts", results.shape[0], border=True)
+    c3.metric("Efforts", results.shape[0] - (0.5 if 5083506 in results["rider_id"].to_list() else 0), border=True)
