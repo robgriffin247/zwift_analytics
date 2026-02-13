@@ -76,7 +76,7 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.dataframe(results[["event_id", "stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
+    st.dataframe(results[["stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
             "rider":st.column_config.TextColumn("Rider"),
