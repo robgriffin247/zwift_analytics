@@ -29,7 +29,7 @@ st.html(
 )
 
 
-st.set_page_config(page_title="iTTea & Scone")
+st.set_page_config(page_title="iTTea & Scone", page_icon=":tea:")
 
 main_page = st.Page("pages/main.py", title="Home", icon="🏆")
 data_input_page = st.Page("pages/data_input.py", title="Add Events", icon=":material/add_circle:")
