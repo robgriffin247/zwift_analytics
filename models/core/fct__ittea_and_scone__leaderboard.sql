@@ -11,12 +11,13 @@ best_results as (
         velo_first,
         velo_first_category,
         race_seconds
-    from {{ ref("fct__ts_itt_club_spring_2026__results") }}
+    from {{ ref("fct__ittea_and_scone__results") }}
     where is_best_effort
 ),
 
 leaderboard as (
     select 
+        season_id,
         rider_id, 
         rider,
         category,
@@ -38,6 +39,8 @@ add_gap as (
 formatted_leaderboard as (
     select 
         * exclude(gap),
+        row_number() over (partition by season_id order by races desc, total_seconds) as overall_rank,
+        row_number() over (partition by season_id, category order by races desc, total_seconds) as category_rank,
         {{ format_seconds_to_time("total_seconds") }} as total_time,
         case when gap=0 then ' ' else '+ ' || {{ format_seconds_to_time("gap", false) }} end as gap
     from add_gap

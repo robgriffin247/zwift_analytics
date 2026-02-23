@@ -1,7 +1,6 @@
 import streamlit as st
 import polars as pl
 
-
 def seconds_to_hhmmss(seconds: float) -> str:
     total = int(round(seconds))
     hours, rem = divmod(total, 3600)
@@ -11,61 +10,93 @@ def seconds_to_hhmmss(seconds: float) -> str:
         return f"{hours:02d}:{minutes:02d}:{secs:02d}"
     return f"{minutes:02d}:{secs:02d}"
 
-results = st.session_state["results"]
 leaderboard = st.session_state["leaderboard"]
+results = st.session_state["results"]
+
+# Show season selector if >1 season in data
+if results[["season_id"]].unique().shape[0]>1:
+
+    c1, _ = st.columns([2,12])
+
+    selected_season = c1.number_input(
+        "Season", 
+        min_value=results[["season_id"]].min()["season_id"].to_list()[0],
+        max_value=results[["season_id"]].max()["season_id"].to_list()[0],
+        value=results[["season_id"]].max()["season_id"].to_list()[0],
+    )
+
+    st.write("")
+
+    leaderboard = leaderboard.filter(pl.col("season_id")==selected_season)
+    results = results.filter(pl.col("season_id")==selected_season)
+
 
 unique_riders = results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list()
 unique_cats = results[["category"]].unique().sort(by=pl.col("category"))["category"].to_list()
 unique_stages = results[["stage"]].unique().sort(by=pl.col("stage"))["stage"].to_list()
 
+# Roll of Honor
+medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
+st.markdown("##### The Greggs Sausage-Roll of Honour")
+cols = st.columns(len(unique_cats), border=True)
+for i, cat in enumerate(unique_cats):
+    with cols[i]:
+        leaders = leaderboard.filter(pl.col("category")==cat)["rider"].to_list()
+        for j, medal in enumerate(medals):
+            if j<len(leaders):
+                st.markdown(
+                    f"""
+                    {'**' if j==0 else ''}{medals[j]} {leaders[j]}{'**' if j==0 else ''}
+                    """
+                )
+
 
 tab_leaderboard, tab_results = st.tabs(["Leaderboard", "Results"])
 
 with tab_leaderboard:
-    
-    medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
-    st.markdown("##### The Sausage-Roll of Honour, sponsored by Greggs")
-    cols = st.columns(len(unique_cats), border=True)
-    for i, cat in enumerate(unique_cats):
-        with cols[i]:
-            leaders = leaderboard.filter(pl.col("category")==cat)["rider"].to_list()
-            for j, medal in enumerate(medals):
-                if j<len(leaders):
-                    st.markdown(
-                        f"""
-                        {'**' if j==0 else ''}{medals[j]} {leaders[j]}{'**' if j==0 else ''}
-                        """
-                    )
 
-    st.markdown("##### Current Leaderboard")
-    leaderboard = leaderboard.with_columns(
-        pl.int_range(1, pl.len() + 1).alias("rank")
-    )
+    c1, _ = st.columns([2,10])
+    input_leaderboard_categories = c1.selectbox("Category", options=["All"] + unique_cats, key="leaderboard_cats")
+    selected_leaderboard_categories = unique_cats if input_leaderboard_categories == "All" else [input_leaderboard_categories] 
+    leaderboard = leaderboard.filter(pl.col("category").is_in(selected_leaderboard_categories))
 
-    st.dataframe(leaderboard[["rank", "rider", "category", "velo_first", "velo_first_category", "races", "total_time", "gap"]], 
-        column_config={
-            "rank":st.column_config.NumberColumn("Rank", width="small"),
-            "rider":st.column_config.TextColumn("Rider"),
-            "category":st.column_config.TextColumn("Cat.", width="small"),
-            "velo_first":st.column_config.NumberColumn("Velo", format="%.1f"),
-            "velo_first_category":st.column_config.TextColumn("Velo Cat."),
-            "races":st.column_config.NumberColumn("Races", width="small"),
-            "total_time":st.column_config.TextColumn("Total Time", width="small"),
-            "gap":st.column_config.TextColumn("Gap", width="small"),
-        },
-    )
+    # leaderboard = leaderboard.with_columns(
+    #     pl.int_range(1, pl.len() + 1).alias("rank")
+    # )
+
+    if leaderboard.shape[0]>0:
+        # st.dataframe(leaderboard[["rank", "rider", "category", "velo_first", "velo_first_category", "races", "total_time", "gap"]], 
+        st.dataframe(leaderboard[["category_rank" if input_leaderboard_categories!="All" else "overall_rank", "rider", "category", "velo_first", "velo_first_category", "races", "gap"]], 
+            column_config={
+                "overall_rank":st.column_config.NumberColumn("Rank", width="small"),
+                "category_rank":st.column_config.NumberColumn("Rank", width="small"),
+                "rider":st.column_config.TextColumn("Rider"),
+                "category":st.column_config.TextColumn("Cat.", width="small"),
+                "velo_first":st.column_config.NumberColumn("Velo", format="%.1f"),
+                "velo_first_category":st.column_config.TextColumn("Velo Cat."),
+                "races":st.column_config.NumberColumn("Races", width="small"),
+                "total_time":st.column_config.TextColumn("Total Time", width="small"),
+                "gap":st.column_config.TextColumn("Gap", width="small"),
+            },
+        )
 
 with tab_results:
     
-    c1, c2, c3 = st.columns([5,2,2], vertical_alignment="bottom")
-    selected_rider = c1.selectbox("Rider", options=["All"] + unique_riders)
-    selected_stage = c2.selectbox("Stage", options=["All"] + unique_stages)
-    only_show_best_efforts = c3.toggle("Bests Only", value=False)
+    c1, c2, c3, c4 = st.columns([2,2,6,2], vertical_alignment="bottom")
 
-    if selected_rider=="All":
+    input_results_categories = c1.selectbox("Category", options=["All"] + unique_cats, key="results_cats")
+    selected_results_categories = unique_cats if input_results_categories == "All" else [input_results_categories] 
+    results = results.filter(pl.col("category").is_in(selected_results_categories))
+    
+    selected_stage = c2.selectbox("Stage", options=["All"] + unique_stages)
+    selected_riders = c3.multiselect("Rider(s)", options=results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list())
+    only_show_best_efforts = c4.toggle("Bests Only", value=False)
+
+
+    if len(selected_riders)==0:
         pass
     else:
-        results = results.filter(pl.col("rider").is_in([selected_rider]))
+        results = results.filter(pl.col("rider").is_in(selected_riders))
     
     if selected_stage=="All":
         pass
@@ -93,12 +124,5 @@ with tab_results:
     c1, c2, c3 = st.columns(3)
     c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
     c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts",
-        int(count) if (count := results.with_columns(
-            pl.when((pl.col("rider_id") == 5083506) & (pl.col("event_id") == 5393497))
-            .then(0.5)
-            .otherwise(1.0)
-            .alias("weight")
-        ).select(pl.col("weight").sum()).item()) == int(count) else count
-        , border=True
+    c3.metric("Efforts", results.shape[0] , border=True
     )

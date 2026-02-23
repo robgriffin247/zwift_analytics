@@ -67,17 +67,21 @@ def get_event_results_job():
             where event_id not in (select event_id from loaded_events)
             """).pl()["event_id"].to_list()
     
-    if len(event_ids)>0:
-        i = 0
-        print(f"Identified {len(event_ids)} events to load!")
+    remaining = len(event_ids)
+    
+    while remaining>0:
+
+        print(f"Identified {remaining} events to load!\n" + (80*"=") + "\n")
+
         for event in event_ids:
             print(f"Getting event {event}")
-            if i>=1:
-                print("Waiting to run api request...")
+            if remaining<len(event_ids):
+                print("> Waiting to run api request...")
                 time.sleep(70)
-            i+=1
 
             print(run_pipeline(get_event_results(event)))
+            remaining-=1
+            print(f"{remaining} events left to fetch!\n")
 
         build_models()
 
