@@ -41,6 +41,22 @@ def get_riders():
     
     return "Loaded riders from google sheets"
 
+
+def get_seasons():
+    with duckdb.connect(database) as con:
+        con.execute(
+            f"""
+            create schema if not exists google_sheets;
+
+            create or replace table google_sheets.seasons as
+            select *
+            from read_csv_auto('https://docs.google.com/spreadsheets/d/{os.getenv("GOOGLE_SHEETS__ZWIFT_ANALYTICS")}/export?format=csv&gid={os.getenv("GOOGLE_SHEETS__ZWIFT_ANALYTICS__SEASONS_SHEET")}');
+        """
+        )
+    
+    return "Loaded seasons from google sheets"
+
 if __name__=="__main__":
     print(get_events())
     print(get_riders())
+    print(get_seasons())

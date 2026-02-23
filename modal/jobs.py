@@ -4,7 +4,7 @@ import time
 
 from dbt_runner import build_models
 
-from ingestion.google_sheets import get_events, get_riders
+from ingestion.google_sheets import get_events, get_riders, get_seasons
 from ingestion.zwift_racing import run_pipeline, get_event_results, post_riders
 
 target = os.getenv("TARGET")
@@ -39,6 +39,8 @@ def get_event_results_job():
     
     # Update the google sheets data into db
     get_events()
+    get_riders()
+    get_seasons()
 
     with duckdb.connect(database) as con:
 
