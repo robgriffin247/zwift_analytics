@@ -60,12 +60,7 @@ with tab_leaderboard:
     selected_leaderboard_categories = unique_cats if input_leaderboard_categories == "All" else [input_leaderboard_categories] 
     leaderboard = leaderboard.filter(pl.col("category").is_in(selected_leaderboard_categories))
 
-    # leaderboard = leaderboard.with_columns(
-    #     pl.int_range(1, pl.len() + 1).alias("rank")
-    # )
-
     if leaderboard.shape[0]>0:
-        # st.dataframe(leaderboard[["rank", "rider", "category", "velo_first", "velo_first_category", "races", "total_time", "gap"]], 
         st.dataframe(leaderboard[["category_rank" if input_leaderboard_categories!="All" else "overall_rank", "rider", "category", "velo_first", "velo_first_category", "races", "gap"]], 
             column_config={
                 "overall_rank":st.column_config.NumberColumn("Rank", width="small"),
