@@ -23,6 +23,15 @@ sources:
             data_tests:
               - not_null
               - unique
+    
+      - name: seasons
+        description: Seasons of TT relating to Zwift TT Club
+        columns:
+          - name: season_id
+            description: Unique seasons identifier as used by Zwift TT Racing Club
+            data_tests:
+              - not_null
+              - unique
 
   - name: zwift_racing
     description: Data from ZwiftRacing.app API
