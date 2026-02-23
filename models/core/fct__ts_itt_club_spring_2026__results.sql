@@ -55,4 +55,4 @@ add_best_effort as (
     from add_categories
 )
 
-select * from add_best_effort order by rider, stage
+select * from add_best_effort order by rider, event_start_epoch

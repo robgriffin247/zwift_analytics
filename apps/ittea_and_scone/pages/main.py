@@ -1,6 +1,7 @@
 import streamlit as st
 import polars as pl
 
+
 def seconds_to_hhmmss(seconds: float) -> str:
     total = int(round(seconds))
     hours, rem = divmod(total, 3600)
@@ -101,5 +102,3 @@ with tab_results:
         ).select(pl.col("weight").sum()).item()) == int(count) else count
         , border=True
     )
-        # 5083506
-        # 5393497

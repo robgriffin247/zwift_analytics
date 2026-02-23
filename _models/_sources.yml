@@ -1,9 +1,0 @@
-version: 2
-
-sources:
-  - name: zrapp
-    description: Raw zwiftracing.app API data
-    schema: zrapp
-    tables:
-      - name: riders
-        description: Raw rider data including characteristics, power, phenotypes, ratings and handicaps.
