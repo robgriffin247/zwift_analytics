@@ -1,4 +1,5 @@
 with
+
 round_first_race as (
   select 
     event,

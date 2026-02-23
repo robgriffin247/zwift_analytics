@@ -3,6 +3,7 @@ with
 results as (
     select
         event_id,
+        season_id,
         stage,
         stage_name,
         stage_distance,
@@ -17,7 +18,8 @@ results as (
         race_time,
         race_speed
     from {{ ref("int__results") }}
-    where league_id in (3165) and rider_id in (select rider_id from {{ ref("stg__google_sheets__riders") }})
+    where season_id in (select season_id from {{ ref("stg__google_sheets__seasons") }} ) and 
+        rider_id in (select rider_id from {{ ref("stg__google_sheets__riders") }})
 ),
 
 categories as (

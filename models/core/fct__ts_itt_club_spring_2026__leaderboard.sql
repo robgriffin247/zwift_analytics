@@ -2,6 +2,7 @@ with
 
 best_results as (
     select 
+        season_id,
         stage,
         stage_name,
         rider_id,

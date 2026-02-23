@@ -1,9 +1,25 @@
 with
+
 gs_events as (
     select 
         league_id,
         event_id
     from {{ ref("stg__google_sheets__events")}}
+),
+
+gs_seasons as (
+  select
+    season_id,
+    league_id,
+  from {{ ref("stg__google_sheets__seasons")}}
+),
+
+gs_events_with_season as (
+    select
+        gs_events.event_id,
+        gs_events.league_id,
+        gs_seasons.season_id
+    from gs_events left join gs_seasons using(league_id)
 ),
 
 zr_events as (
@@ -50,7 +66,8 @@ stages as (
 
 results_with_event_details as (
     select 
-        gs_events.league_id,
+        gs_events_with_season.season_id,
+        gs_events_with_season.league_id,
         zr_events.* exclude(_dlt_id),
         stages.stage,
         stages.stage_name,
@@ -60,7 +77,7 @@ results_with_event_details as (
         {{ format_seconds_to_time("race_seconds", false) }} as race_time
     from results
         left join zr_events on results._dlt_parent_id=zr_events._dlt_id
-        left join gs_events using(event_id)
+        left join gs_events_with_season using(event_id)
         left join stages using(event)
 ),
 
