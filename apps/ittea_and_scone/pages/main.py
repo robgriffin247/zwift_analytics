@@ -119,5 +119,4 @@ with tab_results:
     c1, c2, c3 = st.columns(3)
     c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
     c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts", results.shape[0] , border=True
-    )
+    c3.metric("Efforts", results[["effort_counter"]].sum()["effort_counter"].to_list()[0] , border=True)

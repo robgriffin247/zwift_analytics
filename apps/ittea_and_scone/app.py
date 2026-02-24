@@ -69,7 +69,7 @@ def load_data():
     return [leaderboard, results]
 
 if "leaderboard" not in st.session_state or "results" not in st.session_state:
-    st.session_state["leaderboard"],  st.session_state["results"] = load_data()
+    st.session_state["leaderboard"], st.session_state["results"] = load_data()
 
 
 

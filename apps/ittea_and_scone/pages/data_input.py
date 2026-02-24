@@ -55,5 +55,8 @@ st.write("")
 
 c1, c2 = st.columns([7,2], vertical_alignment="bottom")
 input_text = c1.text_input("Data")
+
 if c2.button("Convert"):
-    st.dataframe(events_df_from_text(input_text, league_id))
+    out = events_df_from_text(input_text, league_id)
+    st.toast(f"{out.shape[0]} events found!")
+    st.dataframe(out)
