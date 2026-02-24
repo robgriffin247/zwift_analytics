@@ -170,10 +170,10 @@ with tab_medal:
     c1.dataframe(season_medals[["rider", "category_gold", "category_silver", "category_bronze", "category_total"]],
         column_config={
             "rider":st.column_config.TextColumn("Rider"),
-            "category_gold":st.column_config.NumberColumn("🥇", width=40),
-            "category_silver":st.column_config.NumberColumn("🥈", width=40),
-            "category_bronze":st.column_config.NumberColumn("🥉", width=40),
-            "category_total":st.column_config.NumberColumn("Total", width=40),
+            "category_gold":st.column_config.NumberColumn("🥇", width=32),
+            "category_silver":st.column_config.NumberColumn("🥈", width=32),
+            "category_bronze":st.column_config.NumberColumn("🥉", width=32),
+            "category_total":st.column_config.NumberColumn("Tot."),
         }
     )
 
@@ -181,10 +181,10 @@ with tab_medal:
     c2.dataframe(stage_medals[["rider", "category_gold", "category_silver", "category_bronze", "category_total"]],
         column_config={
             "rider":st.column_config.TextColumn("Rider"),
-            "category_gold":st.column_config.NumberColumn("🥇", width=40),
-            "category_silver":st.column_config.NumberColumn("🥈", width=40),
-            "category_bronze":st.column_config.NumberColumn("🥉", width=40),
-            "category_total":st.column_config.NumberColumn("Total", width=40),
+            "category_gold":st.column_config.NumberColumn("🥇", width=32),
+            "category_silver":st.column_config.NumberColumn("🥈", width=32),
+            "category_bronze":st.column_config.NumberColumn("🥉", width=32),
+            "category_total":st.column_config.NumberColumn("Tot.", width=32),
         }
     )
 
