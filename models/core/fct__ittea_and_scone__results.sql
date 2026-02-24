@@ -59,8 +59,8 @@ add_best_effort as (
 
 add_placings as (
     select *,
-        case when is_best_effort then row_number() over (partition by season_id, stage order by race_seconds) else null end as overall_placing,
-        case when is_best_effort then row_number() over (partition by season_id, stage, category order by race_seconds) else null end as category_placing
+        case when is_best_effort then row_number() over (partition by season_id, stage, is_best_effort order by race_seconds) else null end as overall_placing,
+        case when is_best_effort then row_number() over (partition by season_id, stage, category, is_best_effort order by race_seconds) else null end as category_placing
     from add_best_effort
 ),
 

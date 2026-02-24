@@ -103,9 +103,11 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.dataframe(results[["stage", "rider", "category", "stage_name", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
+    st.dataframe(results[["stage", "overall_placing" if input_results_categories=="All" else "category_placing", "rider", "category", "event_start_datetime", "race_time", "race_speed", "is_best_effort"]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
+            "overall_placing":st.column_config.NumberColumn("Rank"),
+            "category_placing":st.column_config.NumberColumn("Rank"),
             "rider":st.column_config.TextColumn("Rider"),
             "category":st.column_config.TextColumn("Cat."),
             "stage_name":st.column_config.TextColumn("Route"),
