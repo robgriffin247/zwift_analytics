@@ -43,7 +43,7 @@ with duckdb.connect() as con:
 
 
 # Show season selector if >1 season in data
-if results[["season_id"]].unique().shape[0]>0:
+if results[["season_id"]].unique().shape[0]>1:
 
     c1, _ = st.columns([2,12])
 
@@ -74,7 +74,7 @@ with tab_leaderboard:
         
     # Roll of Honor
     medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
-    st.markdown(f"##### The Greggs Sausage-Roll of Honour - Season {selected_season}")
+    st.markdown(f"##### The Greggs Sausage-Roll of Honour")
     cols = st.columns(len(unique_cats), border=True)
     for i, cat in enumerate(unique_cats):
         with cols[i]:
@@ -100,7 +100,6 @@ with tab_leaderboard:
         leaderboard = leaderboard.filter(pl.col("rider").is_in(selected_leaderboard_riders))
     
     if leaderboard.shape[0]>0:
-        st.markdown(f"##### Season {selected_season} Standings")
         st.dataframe(leaderboard[["category_rank" if input_leaderboard_categories!="All" else "overall_rank", "rider", "category", "velo_first", "velo_first_category", "races", "gap"]], 
             column_config={
                 "overall_rank":st.column_config.NumberColumn("Rank", width="small"),
