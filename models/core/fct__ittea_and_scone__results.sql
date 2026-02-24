@@ -57,11 +57,18 @@ add_best_effort as (
     from add_categories
 ),
 
+add_placings as (
+    select *,
+        case when is_best_effort then row_number() over (partition by season_id, stage order by race_seconds) else null end as overall_placing,
+        case when is_best_effort then row_number() over (partition by season_id, stage, category order by race_seconds) else null end as category_placing
+    from add_best_effort
+),
+
 add_easter_eggs as (
     select * exclude(rider),
         case when rider_id=292691 then rider || '❤️England' else rider end as rider,
         case when rider_id=5083506 and event_id=5393497 then 0.5 else 1 end as effort_counter
-    from add_best_effort
+    from add_placings
 )
 
 select * from add_easter_eggs order by season_id, stage, race_seconds

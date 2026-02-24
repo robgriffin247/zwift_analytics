@@ -38,9 +38,9 @@ def refresh_riders_job():
 def get_event_results_job():
     
     # Update the google sheets data into db
-    get_events()
-    get_riders()
-    get_seasons()
+    print(get_events())
+    print(get_riders())
+    print(get_seasons())
 
     with duckdb.connect(database) as con:
 
@@ -69,6 +69,9 @@ def get_event_results_job():
     
     remaining = len(event_ids)
     
+    if remaining==0:
+        print("No events to load.")
+
     while remaining>0:
 
         print(f"Identified {remaining} events to load!\n" + (80*"=") + "\n")
@@ -81,7 +84,7 @@ def get_event_results_job():
 
             print(run_pipeline(get_event_results(event)))
             remaining-=1
-            print(f"{remaining} events left to fetch!\n")
+            print(f"{remaining} event{'s' if remaining>1 else ''} left to ingest.\n")
 
         build_models()
 
