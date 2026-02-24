@@ -46,13 +46,13 @@ def daily_3am():
 
 
 @app.function(
-    schedule=modal.Cron("5,25,45 * * * *"),
+    schedule=modal.Cron("5 * * * *"),
     secrets=SECRETS,
     volumes=VOLUMES,
     timeout=TIMEOUT,
     retries=RETRIES,
 )
-def every_20_minutes():
+def hourly():
     get_event_results_job()
     dlt_volume.commit()
     print("Volume commited")
