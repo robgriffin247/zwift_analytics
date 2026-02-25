@@ -23,8 +23,10 @@ with duckdb.connect() as con:
             sum(category_rank=1) as category_gold,
             sum(category_rank=2) as category_silver,
             sum(category_rank=3) as category_bronze,
-            sum(category_rank in (1,2,3)) as category_total
-        from leaderboard group by all
+            sum(category_rank in (1,2,3)) as category_total,
+            count(*) as seasons
+        from leaderboard 
+        group by all
         order by category_gold desc, category_silver desc, category_bronze desc, category
     """).pl()
 
@@ -36,8 +38,11 @@ with duckdb.connect() as con:
                 sum(category_placing=1) as category_gold,
                 sum(category_placing=2) as category_silver,
                 sum(category_placing=3) as category_bronze,
-                sum(category_placing in (1,2,3)) as category_total
-            from results group by all
+                sum(category_placing in (1,2,3)) as category_total,
+                count(*) as stages
+            from results 
+            where is_best_effort
+            group by all
             order by category_gold desc, category_silver desc, category_bronze desc, category
         """).pl()
 
@@ -167,24 +172,26 @@ with tab_medal:
     
     c1, c2 = st.columns(2)
     c1.markdown("##### Season Medals")
-    c1.dataframe(season_medals[["rider", "category_gold", "category_silver", "category_bronze", "category_total"]],
+    c1.dataframe(season_medals[["rider", "category_gold", "category_silver", "category_bronze", "seasons"]],
         column_config={
             "rider":st.column_config.TextColumn("Rider"),
             "category_gold":st.column_config.NumberColumn("🥇", width=32),
             "category_silver":st.column_config.NumberColumn("🥈", width=32),
             "category_bronze":st.column_config.NumberColumn("🥉", width=32),
             "category_total":st.column_config.NumberColumn("Tot."),
+            "seasons":st.column_config.NumberColumn("🏁"),
         }
     )
 
     c2.markdown("##### Stage Medals")
-    c2.dataframe(stage_medals[["rider", "category_gold", "category_silver", "category_bronze", "category_total"]],
+    c2.dataframe(stage_medals[["rider", "category_gold", "category_silver", "category_bronze", "stages"]],
         column_config={
             "rider":st.column_config.TextColumn("Rider"),
             "category_gold":st.column_config.NumberColumn("🥇", width=32),
             "category_silver":st.column_config.NumberColumn("🥈", width=32),
             "category_bronze":st.column_config.NumberColumn("🥉", width=32),
             "category_total":st.column_config.NumberColumn("Tot.", width=32),
+            "stages":st.column_config.NumberColumn("🏁", width=32),
         }
     )
 

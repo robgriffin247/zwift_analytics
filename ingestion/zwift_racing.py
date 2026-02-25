@@ -96,9 +96,10 @@ def run_pipeline(resource: DltResource) -> None:
 
 if __name__ == "__main__":
     # Just inspect the data
-    # for rider in get_rider(4598636):
-    #     print(rider)
-    
+    for rider in get_rider(4598636):
+        print(rider)
+    # for i in get_event_results(5393234):
+    #     print(i)
     # Or run the full pipeline
     # run_pipeline(get_rider(4598636))
     # run_pipeline(post_riders([4598636, 5574]))
@@ -109,4 +110,4 @@ if __name__ == "__main__":
     #     i += 1
     #     if i<len(events):
     #         time.sleep(61)
-    run_pipeline(get_event_results(5393234))
+    # run_pipeline(get_event_results(5393234))
