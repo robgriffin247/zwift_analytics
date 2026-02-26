@@ -7,6 +7,13 @@ dev_db = "data/zwift_analytics_dev.duckdb"
 def clone_prod_to_dev():
     motherduck_token = os.getenv("MOTHERDUCK_TOKEN")
 
+    # Ensure we start from a clean local database file before cloning.
+    if os.path.exists(dev_db):
+        os.remove(dev_db)
+    wal_file = f"{dev_db}.wal"
+    if os.path.exists(wal_file):
+        os.remove(wal_file)
+
     with duckdb.connect() as con:
         con.sql("INSTALL motherduck;")
         con.sql("LOAD motherduck;")
