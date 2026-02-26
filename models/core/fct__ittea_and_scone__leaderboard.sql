@@ -32,7 +32,7 @@ leaderboard as (
 
 add_gap as (
     select *,
-        total_seconds - min(total_seconds) over (partition by races order by races desc, total_seconds) as gap 
+        total_seconds - min(total_seconds) over (partition by season_id, races order by races desc, total_seconds) as gap 
     from leaderboard
 ),
 
@@ -46,4 +46,4 @@ formatted_leaderboard as (
     from add_gap
 )
 
-select * from formatted_leaderboard order by races desc, total_seconds
+select * from formatted_leaderboard order by season_id, races desc, total_seconds
