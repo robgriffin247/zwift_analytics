@@ -34,7 +34,6 @@ with duckdb.connect() as con:
             select 
                 rider_id, 
                 rider, 
-                category_raced,
                 sum(category_placing=1) as category_gold,
                 sum(category_placing=2) as category_silver,
                 sum(category_placing=3) as category_bronze,
@@ -43,7 +42,7 @@ with duckdb.connect() as con:
             from results 
             where is_best_effort
             group by all
-            order by category_gold desc, category_silver desc, category_bronze desc, category_raced
+            order by category_gold desc, category_silver desc, category_bronze desc, stages
         """).pl()
 
 
@@ -147,8 +146,15 @@ with tab_results:
     else:
         results = results.filter(pl.col("is_best_effort")==True)
 
-    st.write(f"")
-    st.dataframe(results[["stage", "category", "overall_placing" if input_results_categories=="All" else "category_placing", "rider", "race_time", "race_speed", "is_best_effort", "event_start_datetime", ]],
+
+    st.markdown("")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
+    c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
+    c3.metric("Efforts", results[["effort_counter"]].sum()["effort_counter"].to_list()[0] , border=True)
+
+    st.markdown("")
+    st.dataframe(results[["stage", "category", "overall_placing" if input_results_categories=="All" else "category_placing", "rider", "race_time", "race_speed", "category_raced", "is_best_effort", "event_start_datetime", ]],
         column_config={
             "stage":st.column_config.NumberColumn("Stage"),
             "overall_placing":st.column_config.NumberColumn("Rank"),
@@ -160,13 +166,11 @@ with tab_results:
             "race_time":st.column_config.TextColumn("Time"),
             "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
             "is_best_effort":st.column_config.CheckboxColumn("Best"),
+            "category_raced":st.column_config.TextColumn("Cat. Raced"),
         }
     )
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
-    c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts", results[["effort_counter"]].sum()["effort_counter"].to_list()[0] , border=True)
+    st.markdown("*Cat. = Highest category raced during selected season.*")
 
 with tab_medal:
     
@@ -195,4 +199,4 @@ with tab_medal:
         }
     )
 
-    st.markdown("*Medals awarded per category*")
+    st.markdown("*Medals awarded per category. Season category = highest category raced during season. Stage category = category raced per stage.*")
