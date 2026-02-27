@@ -5,7 +5,7 @@ round_first_race as (
     event,
     event_start_epoch,
     event_distance
-  from {{ ref("stg__zwift_racing__events") }}
+  from {{ ref("stg__zr__events") }}
   qualify row_number() over (partition by event order by event_start_epoch)=1
 )
 

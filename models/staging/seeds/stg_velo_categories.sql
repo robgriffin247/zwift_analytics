@@ -1,4 +1,6 @@
-with source as (
+with 
+
+source as (
     select
         category::varchar as category,
         womens::boolean as womens,

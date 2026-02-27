@@ -1,4 +1,4 @@
-series_id,season_id,event_id,start_epoch
+series_id,season_id,event_id,event_start_epoch
 AAAA,33,5393512,1771726800
 AAAA,33,5393511,1771701600
 AAAA,33,5393510,1771143600

@@ -34,7 +34,7 @@ with duckdb.connect() as con:
             select 
                 rider_id, 
                 rider, 
-                category,
+                category_raced,
                 sum(category_placing=1) as category_gold,
                 sum(category_placing=2) as category_silver,
                 sum(category_placing=3) as category_bronze,
@@ -43,7 +43,7 @@ with duckdb.connect() as con:
             from results 
             where is_best_effort
             group by all
-            order by category_gold desc, category_silver desc, category_bronze desc, category
+            order by category_gold desc, category_silver desc, category_bronze desc, category_raced
         """).pl()
 
 

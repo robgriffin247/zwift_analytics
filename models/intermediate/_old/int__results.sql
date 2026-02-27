@@ -30,7 +30,7 @@ zr_events as (
         event_distance,
         event,
         _dlt_id
-    from {{ ref("stg__zwift_racing__events")}}
+    from {{ ref("stg__zr__events")}}
 ),
 
 velo_cats as (
@@ -39,7 +39,7 @@ velo_cats as (
         womens,
         min,
         max
-    from {{ ref("stg__seeds__velo_categories")}}
+    from {{ ref("stg_velo_categories")}}
 ),
 
 results as (
@@ -52,7 +52,7 @@ results as (
         velo_after,
         velo_90_day_max,
         _dlt_parent_id
-    from {{ ref("stg__zwift_racing__results") }}
+    from {{ ref("stg__zr__results") }}
 ),
 
 stages as (
