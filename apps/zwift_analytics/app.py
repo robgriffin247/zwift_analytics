@@ -312,7 +312,7 @@ with tab_medals:
         st.markdown("#### Stage Medals")
 
         selected_rounds = st.slider(
-            "Stages",
+            "Number of previous stages to include",
             help="Include stages from this many previous weeks. Example, 8 includes the 8 most recent stages, including the ongoing week.",
             value=8, 
             min_value=1, 
@@ -350,7 +350,7 @@ with tab_medals:
     with c2:
         st.markdown("#### Season Medals")
         selected_seasons = st.slider(
-            "Seasons",
+            "Number of previous seasons to include",
             help="Include this many previous seasons. Example, 3 includes the 3 most recent seasons, including the ongoing season.",
             value=min([seasons.shape[0], 12]),
             min_value=1,
