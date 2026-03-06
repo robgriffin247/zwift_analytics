@@ -6,6 +6,8 @@ from pathlib import Path
 
 import polars as pl
 
+st.write(os.getenv("TARGET"))
+
 # Ensure repo root is on sys.path for Streamlit Cloud execution.
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
