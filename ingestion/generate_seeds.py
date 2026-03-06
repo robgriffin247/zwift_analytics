@@ -24,7 +24,7 @@ def generate_events_seed():
         for series in active_series.iter_rows(named=True):
             print(f"{_logging_time()}: Getting events for series ID {series['series_id']}; {series['series_name']}")
             series_events = con.sql(f"""
-                select '{series["series_id"]}' as series_id, season_id, event_id, event_start_epoch
+                select '{series["series_id"]}' as series_id, season_id, stage, event_id, event_start_epoch
                 from read_csv_auto('https://docs.google.com/spreadsheets/d/{series["sheet_id"]}/export?format=csv&gid={series["events_sheet_id"]}')
                 """).pl()
             
@@ -49,7 +49,7 @@ def generate_riders_seed():
         riders = []
 
         for series in active_series.iter_rows(named=True):
-            print(f"{_logging_time()}: Getting events for series ID {series['series_id']}; {series['series_name']}")
+            print(f"{_logging_time()}: Getting riders for series ID {series['series_id']}; {series['series_name']}")
             series_events = con.sql(f"""
                 select '{series["series_id"]}' as series_id, season_id, rider_id
                 from read_csv_auto('https://docs.google.com/spreadsheets/d/{series["sheet_id"]}/export?format=csv&gid={series["riders_sheet_id"]}')

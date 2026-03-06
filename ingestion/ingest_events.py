@@ -5,7 +5,7 @@ import os
 import duckdb
 import time
 
-from ingestion.generate_events_seed import generate_events_seed, _logging_time
+from ingestion.generate_seeds import generate_events_seed, _logging_time
 from ingestion.zwift_racing import get_event_results, run_pipeline
 
 target = os.getenv("TARGET")
@@ -20,7 +20,7 @@ elif target=="dev":
 else:
     raise ValueError(f"Invalid TARGET value in environment; expected 'prod', 'test' or 'dev', got '{target}'")
 
-def ingest_events():
+def ingest_events(dev=False):
 
     """
     The aim is to:
@@ -34,13 +34,13 @@ def ingest_events():
         past_events = con.sql("""
             select event_id 
             from read_csv_auto('seeds/events.csv') 
-            where to_timestamp(start_epoch::int)<=now() - interval '1 hours'
+            where to_timestamp(event_start_epoch::int)<=now() - interval '1 hours'
             group by 1""").pl()["event_id"].to_list()
 
         recent_events = con.sql("""
             select event_id 
             from read_csv_auto('seeds/events.csv') 
-            where to_timestamp(start_epoch::int) between now() - interval '12 hours' and now()  - interval '1 hours'
+            where to_timestamp(event_start_epoch::int) between now() - interval '12 hours' and now()  - interval '1 hours'
             group by 1""").pl()["event_id"].to_list()
 
     with duckdb.connect(database) as con:
@@ -52,6 +52,10 @@ def ingest_events():
     past_events_not_loaded = list(set(past_events) - set(loaded_events))
 
     events_to_load = list(set(past_events_not_loaded + recent_events))
+    events_to_load.sort(reverse=True)
+
+    if dev:
+        events_to_load = events_to_load[:1]
 
     remaining_loads = len(events_to_load)
 
@@ -65,11 +69,11 @@ def ingest_events():
             
             print(run_pipeline(get_event_results(event)))
 
+            remaining_loads-=1
             print(f"{_logging_time()}: Event {event} loaded - {remaining_loads} remaining!")
             
-            remaining_loads-=1
-
-    return f"{len(events_to_load)} events loaded!\n" + (80*"=")
+    print(f"{len(events_to_load)} events loaded!\n" + (80*"="))
+    return True
 
 if __name__=="__main__":
     print(ingest_events())

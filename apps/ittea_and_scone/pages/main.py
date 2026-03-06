@@ -2,201 +2,224 @@ import streamlit as st
 import polars as pl
 import duckdb 
 
-def seconds_to_hhmmss(seconds: float) -> str:
-    total = int(round(seconds))
-    hours, rem = divmod(total, 3600)
-    minutes, secs = divmod(rem, 60)
+def format_duration(milliseconds):
+    total_seconds = milliseconds // 1000
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
+    minutes = (total_seconds % 3600) // 60
 
-    if total >= 3600:
-        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-    return f"{minutes:02d}:{secs:02d}"
-
-leaderboard = st.session_state["leaderboard"]
+    if days > 0:
+        return f"{days} days, {hours:2}:{minutes:02}"
+    else:
+        return f"{hours:2}:{minutes:02}"
+        
 results = st.session_state["results"]
 
 with duckdb.connect() as con:
-    season_medals = con.sql("""
-        select 
-            rider_id, 
-            rider, 
-            category,
-            sum(category_rank=1) as category_gold,
-            sum(category_rank=2) as category_silver,
-            sum(category_rank=3) as category_bronze,
-            sum(category_rank in (1,2,3)) as category_total,
-            count(*) as seasons
-        from leaderboard 
-        group by all
-        order by category_gold desc, category_silver desc, category_bronze desc, category
-    """).pl()
 
-    stage_medals = con.sql("""
-            select 
-                rider_id, 
-                rider, 
-                sum(category_placing=1) as category_gold,
-                sum(category_placing=2) as category_silver,
-                sum(category_placing=3) as category_bronze,
-                sum(category_placing in (1,2,3)) as category_total,
-                count(*) as stages
-            from results 
+    leaderboard = con.sql("""
+        with source as (
+            select
+                season_id,
+                rider_id,
+                rider,
+                season_category,
+                count(*) as races,
+                sum(race_milliseconds) as race_milliseconds,
+                sum(event_distance)/sum(race_milliseconds)*3600000 as race_speed
+            from results
             where is_best_effort
             group by all
-            order by category_gold desc, category_silver desc, category_bronze desc, stages
-        """).pl()
+        ),
 
+        add_gap as (
+            select
+                *,
+                race_milliseconds - min(race_milliseconds) over (partition by season_id, races) as overall_gap,
+                race_milliseconds - min(race_milliseconds) over (partition by season_id, races, season_category) as category_gap,
+            from source
+        ),
 
-# Show season selector if >1 season in data
-if results[["season_id"]].unique().shape[0]>1:
-
-    c1, _ = st.columns([2,12])
-
-    selected_season = c1.number_input(
-        "Season", 
-        min_value=results[["season_id"]].min()["season_id"].to_list()[0],
-        max_value=results[["season_id"]].max()["season_id"].to_list()[0],
-        value=results[["season_id"]].max()["season_id"].to_list()[0],
-    )
-
-    st.write("")
-
-    leaderboard = leaderboard.filter(pl.col("season_id")==selected_season)
-    results = results.filter(pl.col("season_id")==selected_season)
-
-else:
-    selected_season = results[["season_id"]].min()["season_id"].to_list()[0]
-
-unique_riders = results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list()
-unique_cats = results[["category"]].unique().sort(by=pl.col("category"))["category"].to_list()
-unique_stages = results[["stage"]].unique().sort(by=pl.col("stage"))["stage"].to_list()
-
-
-tab_leaderboard, tab_results, tab_medal = st.tabs(["Season Standings", "Race Results", "Medal Tables"])
-
-with tab_leaderboard:
-
-        
-    # Roll of Honor
-    medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
-    st.markdown(f"##### The Greggs Sausage-Roll of Honour")
-    cols = st.columns(len(unique_cats), border=True)
-    for i, cat in enumerate(unique_cats):
-        with cols[i]:
-            leaders = leaderboard.filter(pl.col("category")==cat)["rider"].to_list()
-            for j, medal in enumerate(medals):
-                if j<len(leaders):
-                    st.markdown(
-                        f"""
-                        {'**' if j==0 else ''}{medals[j]} {leaders[j]}{'**' if j==0 else ''}
-                        """
-                    )
-
-    st.markdown("-----")
-    c1, c2, _ = st.columns([2,6,4])
-    input_leaderboard_categories = c1.selectbox("Category", options=["All"] + unique_cats, key="leaderboard_cats")
-    selected_leaderboard_categories = unique_cats if input_leaderboard_categories == "All" else [input_leaderboard_categories] 
-    leaderboard = leaderboard.filter(pl.col("category").is_in(selected_leaderboard_categories))
-    selected_leaderboard_riders = c2.multiselect("Rider(s)", options=leaderboard[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list(), key="leaderboard_riders")
-
-    if len(selected_leaderboard_riders)==0:
-        pass
-    else:
-        leaderboard = leaderboard.filter(pl.col("rider").is_in(selected_leaderboard_riders))
-    
-    if leaderboard.shape[0]>0:
-        st.dataframe(leaderboard[["category_rank" if input_leaderboard_categories!="All" else "overall_rank", "rider", "category", "velo_first", "velo_first_category", "races", "gap"]], 
-            column_config={
-                "overall_rank":st.column_config.NumberColumn("Rank", width="small"),
-                "category_rank":st.column_config.NumberColumn("Rank", width="small"),
-                "rider":st.column_config.TextColumn("Rider"),
-                "category":st.column_config.TextColumn("Cat.", width="small"),
-                "velo_first":st.column_config.NumberColumn("Velo", format="%.1f"),
-                "velo_first_category":st.column_config.TextColumn("Velo Cat."),
-                "races":st.column_config.NumberColumn("Races", width="small"),
-                "total_time":st.column_config.TextColumn("Total Time", width="small"),
-                "gap":st.column_config.TextColumn("Gap", width="small"),
-            },
+        null_gap as (
+            select 
+                * exclude(race_milliseconds, overall_gap, category_gap), 
+                race_milliseconds::int as race_milliseconds,
+                (case when overall_gap=0 then null else overall_gap end)::int as overall_gap,
+                (case when category_gap=0 then null else category_gap end)::int as category_gap,
+                row_number() over (partition by season_id order by races desc, race_milliseconds) as overall_rank,
+                row_number() over (partition by season_id, season_category order by races desc, race_milliseconds) as category_rank,
+            from add_gap
         )
 
-with tab_results:
+        select * from null_gap order by races desc, race_milliseconds
+    """).pl()
+
+    race_medal_table = con.sql("""
+        with medals as (
+            select 
+                rider_id,
+                rider,
+                sum(category_rank=1) as gold,
+                sum(category_rank=2) as silver,
+                sum(category_rank=3) as bronze,
+                count(*) as races,
+            from results
+            group by all
+        )
+
+        select * exclude(rider_id) from medals order by gold desc, silver desc, bronze desc, races
+    """).pl()
+
+    seasons_medal_table = con.sql("""
+        with medals as (
+            select 
+                rider_id,
+                rider,
+                sum(category_rank=1) as gold,
+                sum(category_rank=2) as silver,
+                sum(category_rank=3) as bronze,
+                count(*) as seasons,
+            from leaderboard
+            group by all
+        )
+
+        select * exclude(rider_id) from medals order by gold desc, silver desc, bronze desc, seasons
+    """).pl()
+
+
+tab_leaderboard, tab_efforts, tab_medals = st.tabs(["Leaderboard", "Efforts", "Medal Tables"])
+
+with tab_leaderboard:
+ 
+    focal_leaderboard = leaderboard
     
-    c1, c2, c3, c4 = st.columns([2,2,6,2], vertical_alignment="bottom")
+    st.write("")
+    podium_container = st.container() # Container podium for given season
+    st.write("")
 
-    input_results_categories = c1.selectbox("Category", options=["All"] + unique_cats, key="results_cats")
-    selected_results_categories = unique_cats if input_results_categories == "All" else [input_results_categories] 
-    results = results.filter(pl.col("category").is_in(selected_results_categories))
+    c1, c2, c3 = st.columns([3,3,9], vertical_alignment="bottom")
+
+    leaderboard_season = c1.number_input("Season", min_value=int(focal_leaderboard["season_id"].min()), max_value=int(focal_leaderboard["season_id"].max()), value=int(focal_leaderboard["season_id"].max()), key="leaderboard_season")
+    focal_leaderboard = focal_leaderboard.filter(pl.col("season_id")==str(leaderboard_season))
+
+    with podium_container:
+        unique_cats = focal_leaderboard["season_category"].unique().sort().to_list()
+
+        # Roll of Honor
+        medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
+        st.markdown(f"##### The Greggs Sausage-Roll of Honour")
+        cols = st.columns(len(unique_cats), border=True)
+        for i, cat in enumerate(unique_cats):
+            with cols[i]:
+                leaders = focal_leaderboard.filter(pl.col("season_category")==cat)["rider"].to_list()
+                for j, medal in enumerate(medals):
+                    if j<len(leaders):
+                        st.markdown(
+                            f"""
+                            {f'**' if j==0 else f''}{cat}{medals[j]} {leaders[j]}{'**' if j==0 else ''}
+                            """
+                        )
+
+    leaderboard_cat = c2.selectbox("Cat.", options=["All"] + focal_leaderboard["season_category"].unique().sort().to_list(), key="leaderboard_cat")
+    focal_leaderboard = focal_leaderboard.filter(pl.col("season_category").is_in([leaderboard_cat] if leaderboard_cat!="All" else ["A", "B", "C", "D"]))
+
+    leaderboard_riders = st.multiselect("Rider(s)", options=focal_leaderboard["rider"].unique().sort().to_list(), key="leaderboard_riders")
+    if len(leaderboard_riders)>0:
+        focal_leaderboard = focal_leaderboard.filter(pl.col("rider").is_in(leaderboard_riders))
     
-    selected_stage = c2.selectbox("Stage", options=["All"] + unique_stages)
-    selected_results_riders = c3.multiselect("Rider(s)", options=results[["rider"]].unique().sort(by=pl.col("rider"))["rider"].to_list())
-    only_show_best_efforts = c4.toggle("Bests Only", value=True)
+    st.write("")
 
-
-    if len(selected_results_riders)==0:
-        pass
-    else:
-        results = results.filter(pl.col("rider").is_in(selected_results_riders))
-    
-    if selected_stage=="All":
-        pass
-    else:
-        results = results.filter(pl.col("stage").is_in([selected_stage]))
-    
-    if not only_show_best_efforts:
-        pass
-    else:
-        results = results.filter(pl.col("is_best_effort")==True)
-
-
-    st.markdown("")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Time", seconds_to_hhmmss(results[["race_seconds"]].sum()["race_seconds"].to_list()[0]), border=True)
-    c2.metric("Distance", f"{results[["stage_distance"]].sum()["stage_distance"].to_list()[0]:.2f} km", border=True)
-    c3.metric("Efforts", results[["effort_counter"]].sum()["effort_counter"].to_list()[0] , border=True)
-
-    st.markdown("")
-    st.dataframe(results[["stage", "category", "overall_placing" if input_results_categories=="All" else "category_placing", "rider", "race_time", "race_speed", "category_raced", "is_best_effort", "event_start_datetime", ]],
+    st.dataframe(
+        focal_leaderboard[[
+            "overall_rank" if leaderboard_cat=="All" else "category_rank", 
+            "rider", "season_category", "races", "race_milliseconds", 
+            "overall_gap" if leaderboard_cat=="All" else "category_gap", 
+            "race_speed"]],
         column_config={
-            "stage":st.column_config.NumberColumn("Stage"),
-            "overall_placing":st.column_config.NumberColumn("Rank"),
-            "category_placing":st.column_config.NumberColumn("Rank"),
+            "overall_rank":st.column_config.NumberColumn("Rank"),
+            "category_rank":st.column_config.NumberColumn("Rank"),
             "rider":st.column_config.TextColumn("Rider"),
-            "category":st.column_config.TextColumn("Cat."),
-            "stage_name":st.column_config.TextColumn("Route"),
-            "event_start_datetime":st.column_config.DatetimeColumn("Date/Time", format="D/M/YY HH:mm"),
-            "race_time":st.column_config.TextColumn("Time"),
-            "race_speed":st.column_config.NumberColumn("Speed", format="%.2f"),
+            "season_category":st.column_config.TextColumn("Cat."),
+            "races":st.column_config.NumberColumn("Races"),
+            "race_milliseconds":st.column_config.DatetimeColumn("Time", format="mm:ss.SSS" if focal_leaderboard["race_milliseconds"].max()<3600*1000 else "HH:mm:ss.SSS"),
+            "overall_gap":st.column_config.DatetimeColumn("Gap", format="+ mm:ss.SSS" if focal_leaderboard["overall_gap"].max() is not None and focal_leaderboard["overall_gap"].max()<3600*1000 else "HH:mm:ss.SSS"),
+            "category_gap":st.column_config.DatetimeColumn("Gap", format="+ mm:ss.SSS" if focal_leaderboard["category_gap"].max() is not None and focal_leaderboard["category_gap"].max()<3600*1000 else "HH:mm:ss.SSS"),
+            "race_speed":st.column_config.NumberColumn("km/h", format="%.2f"),
+        }
+    )
+
+with tab_efforts:
+
+    st.write("")
+    c1, c2, c3, c4, _ = st.columns([3,3,3,3,3], vertical_alignment="bottom")
+    
+    focal_results = results
+
+    efforts_season = c1.number_input("Season", min_value=int(focal_results["season_id"].min()), max_value=int(focal_results["season_id"].max()), value=int(focal_results["season_id"].max()), key="results_season")
+    focal_results = focal_results.filter(pl.col("season_id")==str(efforts_season))
+
+    efforts_cat = c2.selectbox("Cat.", options=["All"] + focal_results["category_raced"].unique().sort().to_list(), key="efforts_cat")
+    focal_results = focal_results.filter(pl.col("category_raced").is_in([efforts_cat] if efforts_cat!="All" else ["A", "B", "C", "D"]))
+
+    efforts_stage = c3.selectbox("Stage", options=["All"] + focal_results["stage"].unique().sort().to_list())
+    if efforts_stage!="All":
+        focal_results = focal_results.filter(pl.col("stage")==efforts_stage)
+
+    efforts_bests = c4.toggle("Bests Only", value=True)
+    if efforts_bests:
+        focal_results = focal_results.filter(pl.col("is_best_effort")==True)
+
+    efforts_riders = st.multiselect("Rider(s)", options=focal_results["rider"].unique().sort().to_list())
+    if len(efforts_riders)>0:
+        focal_results = focal_results.filter(pl.col("rider").is_in(efforts_riders))
+    
+    st.write("")
+    c1, c2, c3, c4 = st.columns([3,3,3,3], vertical_alignment="bottom")
+    c1.metric("Efforts", sum(focal_results["effort_counter"].to_list()), border=True)
+    c2.metric("Distance", f"{sum(focal_results["event_distance"].to_list()):.2f} km", border=True)
+    c3.metric("Climbing", f"{sum(focal_results["event_elevation"].to_list()):.0f} m", border=True)
+    c4.metric("Time", format_duration(sum(focal_results["race_milliseconds"].to_list())), border=True)
+
+    st.write("")
+    st.dataframe(
+        focal_results[[
+            "stage", 
+            "overall_rank" if efforts_cat=="All" else "category_rank", 
+            "rider", "category_raced", 
+            "race_milliseconds", "race_speed", "is_best_effort", "event", "event_start_epoch", ]],
+        column_config={
+            "stage":st.column_config.TextColumn("Stage"),
+            "event":st.column_config.TextColumn("Route"),
+            "event_start_epoch":st.column_config.DatetimeColumn("Date/Time", format="D/M/YY HH:mm"),
+            "rider":st.column_config.TextColumn("Rider"),
+            "category_raced":st.column_config.TextColumn("Cat."),
+            "overall_rank":st.column_config.NumberColumn("Rank"),
+            "category_rank":st.column_config.NumberColumn("Rank"),
+            "race_milliseconds":st.column_config.DatetimeColumn("Time", format="mm:ss.SSS" if focal_results["race_milliseconds"].max()<3600*1000 else "HH:mm:ss.SSS"),
+            "race_speed":st.column_config.NumberColumn("km/h", format="%.2f"),
             "is_best_effort":st.column_config.CheckboxColumn("Best"),
-            "category_raced":st.column_config.TextColumn("Cat. Raced"),
         }
-    )
-
-    st.markdown("*Cat. = Highest category raced during selected season.*")
-
-with tab_medal:
+        )
+        
+with tab_medals:
     
+    st.write("")
     c1, c2 = st.columns(2)
-    c1.markdown("##### Season Medals")
-    c1.dataframe(season_medals[["rider", "category_gold", "category_silver", "category_bronze", "seasons"]],
-        column_config={
-            "rider":st.column_config.TextColumn("Rider"),
-            "category_gold":st.column_config.NumberColumn("🥇", width=32),
-            "category_silver":st.column_config.NumberColumn("🥈", width=32),
-            "category_bronze":st.column_config.NumberColumn("🥉", width=32),
-            "category_total":st.column_config.NumberColumn("Tot."),
-            "seasons":st.column_config.NumberColumn("🏁"),
-        }
-    )
+    
+    c1.markdown("##### Races Medal Table")
+    c1.dataframe(race_medal_table, column_config={
+            "rider":st.column_config.TextColumn("Rider", width=280),
+            "gold":st.column_config.NumberColumn("🥇", width=32),
+            "silver":st.column_config.NumberColumn("🥈", width=32),
+            "bronze":st.column_config.NumberColumn("🥉", width=32),
+            "races":st.column_config.NumberColumn("🏁", width=32),
+        })
 
-    c2.markdown("##### Stage Medals")
-    c2.dataframe(stage_medals[["rider", "category_gold", "category_silver", "category_bronze", "stages"]],
-        column_config={
-            "rider":st.column_config.TextColumn("Rider"),
-            "category_gold":st.column_config.NumberColumn("🥇", width=32),
-            "category_silver":st.column_config.NumberColumn("🥈", width=32),
-            "category_bronze":st.column_config.NumberColumn("🥉", width=32),
-            "category_total":st.column_config.NumberColumn("Tot.", width=32),
-            "stages":st.column_config.NumberColumn("🏁", width=32),
-        }
-    )
-
-    st.markdown("*Medals awarded per category. Season category = highest category raced during season. Stage category = category raced per stage.*")
+    c2.markdown("##### Seasons Medal Table")
+    c2.dataframe(seasons_medal_table, column_config={
+            "rider":st.column_config.TextColumn("Rider", width=280),
+            "gold":st.column_config.NumberColumn("🥇", width=32),
+            "silver":st.column_config.NumberColumn("🥈", width=32),
+            "bronze":st.column_config.NumberColumn("🥉", width=32),
+            "seasons":st.column_config.NumberColumn("🏁", width=32),
+        })

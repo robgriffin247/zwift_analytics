@@ -63,15 +63,14 @@ cache_data_hours = 0.25
 )
 def load_data():
     con = get_db_connection()
-    leaderboard = con.sql("select * from core.fct__ittea_and_scone__leaderboard").pl()
-    results = con.sql("select * from core.fct__ittea_and_scone__results").pl()
+    results = con.sql("select * from core.obt_aaab_ittea_and_scone").pl()
 
-    return [leaderboard, results]
+    return results
 
-if "leaderboard" not in st.session_state or "results" not in st.session_state:
-    st.session_state["leaderboard"], st.session_state["results"] = load_data()
+if "results" not in st.session_state:
+    st.session_state["results"] = load_data()
 
-
+results = st.session_state["results"]
 
 # Run pages
 pg = st.navigation([main_page, data_input_page])

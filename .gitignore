@@ -8,3 +8,5 @@ dbt_packages/
 .dbt/
 *pycache*
 temp.py
+
+_scrap/
