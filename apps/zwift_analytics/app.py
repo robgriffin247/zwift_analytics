@@ -78,7 +78,7 @@ selected_season = c1.number_input(
     min_value=min(seasons),
     max_value=max(seasons),
     key="selected_season",
-    help="Pick a season from 32  (Jan 2026) onwards!",
+    help="Pick a season! Note, not all seasons have been loaded to the database yet.",
 )
 
 focal_results = results.filter(pl.col("season_id") == selected_season)
@@ -269,57 +269,23 @@ with tab_leaderboard:
 
 with tab_medals:
 
-    with duckdb.connect() as con:
-        stages = con.sql("""
-            with src as (
-                select 
-                    round_id,
-                    season_id,
-                    stage,
-                    year(event_start_epoch) as yr,
-                    lpad(week(min(event_start_epoch))::varchar, 2, '0') as wk
-                from results 
-                group by all
-            )
-
-            select 
-                round_id, 
-                season_id, 
-                stage, 
-                row_number() over (order by yr desc, wk desc)-1 as age
-            from src""").pl()
-
-        seasons = con.sql("""
-            with src as (
-                select
-                    season_id,
-                    year(event_start_epoch) as yr,
-                    lpad(week(min(event_start_epoch))::varchar, 2, '0') as wk
-                from results
-                group by all
-            )
-
-            select 
-                *,
-                row_number() over (order by yr desc, wk desc)-1 as age
-            from src
-
-            """).pl()
-
     c1, c2 = st.columns(2)
 
     with c1:
         st.markdown("#### Stage Medals")
 
-        selected_rounds = st.slider(
-            "Number of previous stages to include",
-            help="Include stages from this many previous weeks. Example, 8 includes the 8 most recent stages, including the ongoing week.",
-            value=8, 
-            min_value=1, 
-            max_value=min([stages["age"].max(), 52]))
-        
-        
-        results_for_medals = results.filter(pl.col("round_id").is_in(stages.filter(pl.col("age")<=selected_rounds-1)["round_id"].to_list()))
+        rounds = results["round_id"].unique().sort().to_list()
+        select_rounds = st.select_slider(
+            "Stages to include",
+            help="This is shown as <season>.<stage>, so 31.4 is stage 4 of season 31. The default is to select the previous 12 stages, including the current stage.", 
+            options=results["round_id"].unique().sort().to_list(),
+            value=[results["round_id"].unique().sort().to_list()[-12], results["round_id"].unique().sort().to_list()[-1]]
+        )
+    
+        selected_rounds = rounds[rounds.index(select_rounds[0]) : rounds.index(select_rounds[1]) + 1]
+
+        results_for_medals = results.filter(pl.col("round_id").is_in(selected_rounds))
+
 
         with duckdb.connect() as con:
             stage_medals = con.sql("""
@@ -346,18 +312,19 @@ with tab_medals:
                 "races":"🏁",
             }
         )
+
+        st.markdown(f"*{len(selected_rounds)} stages selected*")
         
     with c2:
         st.markdown("#### Season Medals")
         selected_seasons = st.slider(
-            "Number of previous seasons to include",
-            help="Include this many previous seasons. Example, 3 includes the 3 most recent seasons, including the ongoing season.",
-            value=min([seasons.shape[0], 12]),
-            min_value=1,
-            max_value=min([seasons.shape[0], 12])
+            "Seasons to include",
+            value=[results["season_id"].max()-3, results["season_id"].max()],
+            min_value=results["season_id"].min(),
+            max_value=results["season_id"].max()
         )
 
-        leaderboard_for_medals = get_leaderboard(results).filter(pl.col("season_id").is_in(seasons.filter(pl.col("age")<=selected_seasons-1)["season_id"].to_list()))
+        leaderboard_for_medals = get_leaderboard(results).filter(pl.col("season_id").is_in(range(selected_seasons[0], selected_seasons[1]+1)))
 
         with duckdb.connect() as con:
             stage_medals = con.sql("""
@@ -383,3 +350,16 @@ with tab_medals:
                 "races":"🏁",
             }
         )
+
+        st.markdown(f"*{selected_seasons[1]-selected_seasons[0]} seasons selected*")
+
+    st.markdown("""
+    -----
+    The medal tables are a rolling competition showing medals won over the previous stages and seasons. 
+    Medals are awarded to the top three of each category, allowing a little competition to form across categories. 
+    The default has been set to include: 
+    - the previous 12 stages (including the current) for the stage medals table
+    - the previous 3 seasons (including the current) for the seasons table
+
+    Note that the tables above are independent of the season and stage selectors/filters *above* the tabs; those only affect results and the leaderboard. Control the medal tables using the sliders within the medal table tab.
+    """)

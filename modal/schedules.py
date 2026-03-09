@@ -27,7 +27,8 @@ dlt_volume = modal.Volume.from_name("zwift-analytics-dlt-state", create_if_missi
 
 SECRETS = [modal.Secret.from_name("zwift-analytics-secret")]
 VOLUMES = {"/root/.dlt": dlt_volume}
-TIMEOUT = 3200
+TIMEOUT_HOURS = 0.85
+TIMEOUT = int(TIMEOUT_HOURS * 3600)
 RETRIES = 2
 
 app = modal.App("zwift-analytics-scheduled-jobs", image=IMAGE)
@@ -46,7 +47,7 @@ def daily_3am():
 
 
 @app.function(
-    schedule=modal.Cron("5 * * * *"),
+    schedule=modal.Cron("6 * * * *"),
     secrets=SECRETS,
     volumes=VOLUMES,
     timeout=TIMEOUT,

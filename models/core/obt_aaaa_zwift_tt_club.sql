@@ -70,7 +70,7 @@ add_ranks as (
 select_cols as (
     select 
         season_id::int as season_id,
-        season_id::int || '-' || stage as round_id,
+        season_id::int || '.' || stage as round_id,
         stage || '. ' || event as stage,
         event_id,
         event_start_epoch,
