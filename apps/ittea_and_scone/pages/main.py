@@ -107,7 +107,12 @@ with tab_leaderboard:
 
         # Roll of Honor
         medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
-        st.markdown(f"##### The Greggs Sausage-Roll of Honour")
+        
+        season_sponsors = [
+            "The Greggs Sausage-Roll of Honour",
+            "Golden Burr-*iTT*-o Podium, sponsored by Taco Bell",
+        ]
+        st.markdown(f"##### {season_sponsors[leaderboard_season-1]}")
         cols = st.columns(len(unique_cats), border=True)
         for i, cat in enumerate(unique_cats):
             with cols[i]:
