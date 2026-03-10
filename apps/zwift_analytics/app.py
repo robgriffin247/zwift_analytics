@@ -57,7 +57,7 @@ def get_leaderboard(results):
 page_setup("Zwift TT Club Racing - Unofficial", ":bicycle:")
 
 # Data load
-results = load_data()
+results = load_data(0)
 
 st.markdown(
     """
