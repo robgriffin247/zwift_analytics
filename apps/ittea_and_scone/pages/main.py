@@ -105,6 +105,7 @@ with tab_leaderboard:
     with podium_container:
         unique_cats = focal_leaderboard["season_category"].unique().sort().to_list()
 
+
         # Roll of Honor
         medals = [":1st_place_medal:", ":2nd_place_medal:", ":3rd_place_medal:"]
         
