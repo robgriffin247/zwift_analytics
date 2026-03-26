@@ -1,5 +1,5 @@
 import modal
-from jobs import refresh_riders_job, get_event_results_job
+from jobs import refresh_riders_job, get_event_results_job, generate_seeds_job
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -40,7 +40,7 @@ app = modal.App("zwift-analytics-scheduled-jobs", image=IMAGE)
     timeout=TIMEOUT,
     retries=RETRIES,
 )
-def daily_3am():
+def refresh_riders_schedule():
     refresh_riders_job()
     dlt_volume.commit()
     print("Volume commited")
@@ -53,7 +53,20 @@ def daily_3am():
     timeout=TIMEOUT,
     retries=RETRIES,
 )
-def hourly():
+def get_events_results_schedule():
     get_event_results_job()
+    dlt_volume.commit()
+    print("Volume commited")
+
+
+@app.function(
+    schedule=modal.Cron("0 */4 * * *"),
+    secrets=SECRETS,
+    volumes=VOLUMES,
+    timeout=TIMEOUT,
+    retries=RETRIES,
+)
+def generate_seeds_schedule():
+    generate_seeds_job()
     dlt_volume.commit()
     print("Volume commited")

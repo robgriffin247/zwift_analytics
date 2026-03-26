@@ -7,6 +7,7 @@ from dbt_runner import build_models
 from ingestion.ingest_events import ingest_events
 from ingestion.google_sheets import get_events, get_riders, get_seasons
 from ingestion.zwift_racing import run_pipeline, get_event_results, post_riders
+from ingestion.generate_seeds import generate_events_seed, generate_riders_seed
 
 target = os.getenv("TARGET")
 motherduck_token = os.getenv("MOTHERDUCK_TOKEN")
@@ -40,6 +41,11 @@ def get_event_results_job():
     if ingest_events():
         build_models()
     
+
+def generate_seeds_job():
+    generate_events_seed()
+    generate_riders_seed()
+    build_models()
 
 # def _get_event_results_job():
     
