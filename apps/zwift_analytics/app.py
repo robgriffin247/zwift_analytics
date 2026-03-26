@@ -3,6 +3,7 @@ import duckdb
 import os
 import sys
 from pathlib import Path
+from streamlit_extras.buy_me_a_coffee import button
 
 import polars as pl
 

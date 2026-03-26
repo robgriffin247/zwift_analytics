@@ -19,5 +19,6 @@ dependencies = [
     "polars>=1.35.1",
     "pyarrow>=22.0.0",
     "streamlit>=1.54.0",
+    "streamlit-extras>=1.2.0",
     "zpdatafetch>=2.1.0",
 ]
