@@ -242,7 +242,9 @@ with tab_leaderboard:
     elif leaderboard["race_milliseconds"].max() >= 3600 * 1000:
         ms_format = "HH:mm:ss.SSS"
 
-    if leaderboard["gap"].max() < 60 * 1000:
+    if leaderboard["gap"].max()==None:
+        ms_format_gap = "+ ss.SSS"
+    elif leaderboard["gap"].max() < 60 * 1000:
         ms_format_gap = "+ ss.SSS"
     elif leaderboard["gap"].max() < 3600 * 1000:
         ms_format_gap = "+ mm:ss.SSS"
