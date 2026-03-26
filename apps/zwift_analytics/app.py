@@ -366,3 +366,10 @@ with tab_medals:
 
     Note that the tables above are independent of the season and stage selectors/filters *above* the tabs; those only affect results and the leaderboard. Control the medal tables using the sliders within the medal table tab.
     """)
+
+st.markdown("------")
+
+c1,c2,c3,c4 = st.columns(4)
+
+with c4:
+    button(username="robgriffin247", floating=True, text="Buy me a coffee")
