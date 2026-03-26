@@ -35,63 +35,64 @@ def refresh_riders_job():
     
     print(f"Refreshed {len(rider_ids)}")
 
+
 def get_event_results_job():
     if ingest_events():
         build_models()
     
 
-def _get_event_results_job():
+# def _get_event_results_job():
     
-    # Update the google sheets data into db
-    print(get_events())
-    print(get_riders())
-    print(get_seasons())
+#     # Update the google sheets data into db
+#     print(get_events())
+#     print(get_riders())
+#     print(get_seasons())
 
-    with duckdb.connect(database) as con:
+#     with duckdb.connect(database) as con:
 
-        event_ids = con.sql("""
-            with
-            expected_events as (
-                select event_id::int as event_id,
-                from google_sheets.events
-                where to_timestamp(event_start_epoch::int)<now()
-                    and date_diff('minutes', to_timestamp(event_start_epoch::int), now()) > 45
-            ),
+#         event_ids = con.sql("""
+#             with
+#             expected_events as (
+#                 select event_id::int as event_id,
+#                 from google_sheets.events
+#                 where to_timestamp(event_start_epoch::int)<now()
+#                     and date_diff('minutes', to_timestamp(event_start_epoch::int), now()) > 45
+#             ),
 
-            loaded_events as (
-                select event_id::int as event_id
-                from zwift_racing.event_results
-                where 
-                    date_diff('minutes', to_timestamp(time::int), now()) > 120 and
-                    _dlt_id in (select _dlt_parent_id from zwift_racing.event_results__results group by 1)
-                group by 1
-            )
+#             loaded_events as (
+#                 select event_id::int as event_id
+#                 from zwift_racing.event_results
+#                 where 
+#                     date_diff('minutes', to_timestamp(time::int), now()) > 120 and
+#                     _dlt_id in (select _dlt_parent_id from zwift_racing.event_results__results group by 1)
+#                 group by 1
+#             )
             
-            select * 
-            from expected_events 
-            where event_id not in (select event_id from loaded_events)
-            """).pl()["event_id"].to_list()
+#             select * 
+#             from expected_events 
+#             where event_id not in (select event_id from loaded_events)
+#             """).pl()["event_id"].to_list()
     
-    remaining = len(event_ids)
+#     remaining = len(event_ids)
     
-    if remaining==0:
-        print("No events to load.")
+#     if remaining==0:
+#         print("No events to load.")
 
-    while remaining>0:
+#     while remaining>0:
 
-        print(f"Identified {remaining} events to load!\n" + (80*"=") + "\n")
+#         print(f"Identified {remaining} events to load!\n" + (80*"=") + "\n")
 
-        for event in event_ids:
-            print(f"Getting event {event}")
-            if remaining<len(event_ids):
-                print("> Waiting to run api request...")
-                time.sleep(70)
+#         for event in event_ids:
+#             print(f"Getting event {event}")
+#             if remaining<len(event_ids):
+#                 print("> Waiting to run api request...")
+#                 time.sleep(70)
 
-            print(run_pipeline(get_event_results(event)))
-            remaining-=1
-            print(f"{remaining} event{'s' if remaining>1 else ''} left to ingest.\n")
+#             print(run_pipeline(get_event_results(event)))
+#             remaining-=1
+#             print(f"{remaining} event{'s' if remaining>1 else ''} left to ingest.\n")
 
-        build_models()
+#         build_models()
 
     
 if __name__=="__main__":
