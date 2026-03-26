@@ -104,7 +104,7 @@ if len(selected_riders) > 0:
 
 # Tabs
 spacer(1)
-tab_results, tab_leaderboard, tab_medals = st.tabs(["Results", "Leaderboard", "Medal Tables"])
+tab_results, tab_leaderboard, tab_medals = st.tabs(["Race Results", "Season Leaderboard", "Medal Tables"])
 
 # - Results
 with tab_results:
