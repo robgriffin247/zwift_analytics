@@ -10,3 +10,4 @@ dbt_packages/
 temp.py
 
 _scrap/
+dbt_internal_packages/
