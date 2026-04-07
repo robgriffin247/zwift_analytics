@@ -112,7 +112,7 @@ with tab_leaderboard:
         season_sponsors = [
             "The Greggs Sausage-Roll of Honour",
             "Golden Burr-*iTT*-o Podium, sponsored by Taco Bell",
-            "Golden Burr-*iTT*-o Podium, sponsored by Taco Bell",
+            "The Ashes, presented by JB BBQs",
         ]
         st.markdown(f"##### {season_sponsors[leaderboard_season-1]}")
         cols = st.columns(len(unique_cats), border=True)
