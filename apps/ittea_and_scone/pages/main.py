@@ -114,7 +114,7 @@ with tab_leaderboard:
             "Golden Burr-*iTT*-o Podium, sponsored by Taco Bell",
             "The Ashes, presented by JB BBQs",
         ]
-        st.markdown(f"##### {season_sponsors[leaderboard_season-1]}")
+        st.markdown(f"##### {season_sponsors[-1]}")
         cols = st.columns(len(unique_cats), border=True)
         for i, cat in enumerate(unique_cats):
             with cols[i]:
